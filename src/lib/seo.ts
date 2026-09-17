@@ -617,7 +617,7 @@ export const SEO_PAGES: SeoPage[] = [
       {
         heading: "Requirements, then verification",
         body: [
-          "Each slot starts with the limits that appear most often on exam, scholarship and government forms — 200 KB photos at 350 × 350 px, 100 KB signatures, three-page resumes. Every value is editable, because the real answer is always the one printed on your form.",
+          "Each slot starts with a saved preset: the limits published for this deployment, or the ones you saved to your account. They follow the sizes that appear most often on exam, scholarship and government forms — 200 KB photos at 350 × 350 px, 100 KB signatures, three-page resumes. Every value is editable, because the real answer is always the one printed on your form.",
           "Files are inspected as soon as you add them: type, size, pixel dimensions for images, page count for PDFs. Each rule is then marked ✅ met, ⚠️ worth checking, or ❌ not met, with the reason spelled out in numbers.",
         ],
       },
@@ -632,7 +632,7 @@ export const SEO_PAGES: SeoPage[] = [
     faqs: [
       {
         q: "Is my application data saved anywhere?",
-        a: "No. The pack lives in your browser's memory for the session so you can move between tools, and it disappears when you close or reload the tab. There is no account and no server-side storage.",
+        a: "Your documents are not. The pack lives in your browser's memory for the session so you can move between tools, and it disappears when you close or reload the tab. If you are signed in, SubmitReady records a summary of each fix — the filename, the sizes and whether it passed — in your workspace and the admin activity feed. Document contents and prepared files are never stored.",
       },
       {
         q: "Can I use different requirements than the defaults?",

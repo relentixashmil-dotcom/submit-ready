@@ -28,6 +28,7 @@ import {
   uid,
 } from "@/lib/format";
 import { usePack } from "@/context/pack";
+import { useRunLog } from "@/hooks/use-run-log";
 
 const PAGE_OPTIONS: { value: PagePreset; label: string; hint: string }[] = [
   { value: "a4", label: "A4", hint: "210 × 297 mm" },
@@ -74,6 +75,7 @@ export function ImagesToPdfTool() {
   const [error, setError] = useState<string | null>(null);
 
   const { consumeHandoff } = usePack();
+  const logRun = useRunLog();
   const handoffUsed = useRef(false);
 
   const configKey = useMemo(
@@ -202,6 +204,16 @@ export function ImagesToPdfTool() {
       });
       toast.success(`PDF created with ${output.pageCount} page${output.pageCount === 1 ? "" : "s"}`,
         { description: formatBytes(blob.size) });
+
+      void logRun({
+        tool: "images-to-pdf",
+        label: `${output.pageCount} page PDF from ${items.length} image${items.length === 1 ? "" : "s"}`,
+        fileCount: items.length,
+        inputBytes: items.reduce((sum, item) => sum + item.file.size, 0),
+        outputBytes: blob.size,
+        status: "ok",
+        detail: `${pageSize.toUpperCase()} · ${Math.round(quality)}% quality`,
+      });
     } catch (err) {
       const message = describeError(
         err,
@@ -213,7 +225,16 @@ export function ImagesToPdfTool() {
       setProgress(null);
       setBusy(false);
     }
-  }, [configKey, items, keepTransparency, marginMm, orientation, pageSize, quality]);
+  }, [
+    configKey,
+    items,
+    keepTransparency,
+    logRun,
+    marginMm,
+    orientation,
+    pageSize,
+    quality,
+  ]);
 
   const listItems: FileListItem[] = items.map((item) => ({
     id: item.id,

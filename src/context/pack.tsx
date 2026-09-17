@@ -7,6 +7,9 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { useRunLog } from "@/hooks/use-run-log";
 import { compressImage, prepareImageForPdf, resizeImage } from "@/lib/image";
 import { imagesToPdf, readPdfInfo, splitPdf } from "@/lib/pdf";
 import { compressPdf, type CompressionLevel } from "@/lib/pdf-compress";
@@ -67,6 +70,11 @@ interface PackContextValue {
   consumeHandoff: () => File | null;
   summary: { total: number; passed: number; warned: number; failed: number };
   reportText: () => string;
+  /**
+   * The saved preset this slot starts from, if any. Personal presets win over
+   * the global ones an administrator publishes.
+   */
+  presetFor: (slotId: SlotId) => { name: string; requirement: Requirement } | null;
 }
 
 const PackContext = createContext<PackContextValue | null>(null);
@@ -83,6 +91,32 @@ function guessSlot(facts: FileFacts): SlotId {
   return "other";
 }
 
+interface PresetLike {
+  name: string;
+  slotId: string;
+  extensions: string[];
+  minBytes?: number;
+  maxBytes?: number;
+  exactWidth?: number;
+  exactHeight?: number;
+  maxWidth?: number;
+  maxHeight?: number;
+  maxPages?: number;
+}
+
+function presetToRequirement(preset: PresetLike): Requirement {
+  return {
+    extensions: preset.extensions,
+    minBytes: preset.minBytes,
+    maxBytes: preset.maxBytes,
+    exactWidth: preset.exactWidth,
+    exactHeight: preset.exactHeight,
+    maxWidth: preset.maxWidth,
+    maxHeight: preset.maxHeight,
+    maxPages: preset.maxPages,
+  };
+}
+
 function levelForTarget(targetBytes?: number): CompressionLevel {
   if (!targetBytes) return "balanced";
   if (targetBytes <= 150 * 1024) return "strong";
@@ -95,6 +129,33 @@ export function PackProvider({ children }: { children: ReactNode }) {
   const handoffRef = useRef<File | null>(null);
   const itemsRef = useRef<PackItem[]>([]);
   itemsRef.current = items;
+
+  // Presets published by an administrator (global) and saved by the viewer
+  // (personal) decide what a slot starts from, so the pack matches the rules a
+  // form actually asked for without retyping them.
+  const logRun = useRunLog();
+  const presets = useQuery(api.presets.list);
+  const presetMap = useMemo(() => {
+    const map = new Map<string, { name: string; requirement: Requirement }>();
+    for (const preset of presets?.global ?? []) {
+      map.set(preset.slotId, {
+        name: preset.name,
+        requirement: presetToRequirement(preset),
+      });
+    }
+    for (const preset of presets?.personal ?? []) {
+      map.set(preset.slotId, {
+        name: preset.name,
+        requirement: presetToRequirement(preset),
+      });
+    }
+    return map;
+  }, [presets]);
+
+  const presetFor = useCallback(
+    (slotId: SlotId) => presetMap.get(slotId) ?? null,
+    [presetMap],
+  );
 
   const inspect = useCallback(
     async (id: string, file: File, requirement: Requirement) => {
@@ -138,10 +199,12 @@ export function PackProvider({ children }: { children: ReactNode }) {
       const fresh = files.map((file) => {
         const slot = slotById(slotId);
         const id = uid("pack");
+        const saved = presetMap.get(slotId);
         return {
           id,
           slotId,
-          requirement: requirementOverride ?? { ...slot.requirement },
+          requirement: requirementOverride ??
+            (saved ? { ...saved.requirement } : { ...slot.requirement }),
           file,
           facts: {
             name: file.name,
@@ -163,7 +226,7 @@ export function PackProvider({ children }: { children: ReactNode }) {
         void inspect(item.id, item.file, item.requirement);
       });
     },
-    [inspect],
+    [inspect, presetMap],
   );
 
   const addFiles = useCallback(
@@ -362,6 +425,16 @@ export function PackProvider({ children }: { children: ReactNode }) {
               : entry,
           ),
         );
+
+        void logRun({
+          tool: "application-pack",
+          label: `${item.file.name} → ${name}`,
+          fileCount: 1,
+          inputBytes: file.size,
+          outputBytes: blob.size,
+          status: validation.status === "pass" ? "ok" : "partial",
+          detail: action.label,
+        });
       } catch (error) {
         setItems((current) =>
           current.map((entry) =>
@@ -376,7 +449,7 @@ export function PackProvider({ children }: { children: ReactNode }) {
         );
       }
     },
-    [],
+    [logRun],
   );
 
   const summary = useMemo(() => {
@@ -419,6 +492,9 @@ export function PackProvider({ children }: { children: ReactNode }) {
     lines.push(
       "All processing happened locally in the browser. No files were uploaded.",
     );
+    lines.push(
+      "Account and run metadata may be stored by SubmitReady; document contents are not.",
+    );
     return lines.join("\n");
   }, [items]);
 
@@ -435,6 +511,7 @@ export function PackProvider({ children }: { children: ReactNode }) {
       consumeHandoff,
       summary,
       reportText,
+      presetFor,
     }),
     [
       items,
@@ -448,6 +525,7 @@ export function PackProvider({ children }: { children: ReactNode }) {
       consumeHandoff,
       summary,
       reportText,
+      presetFor,
     ],
   );
 

@@ -1,5 +1,5 @@
 import { Link } from "react-router";
-import { ArrowRight, Lock, Wand2 } from "lucide-react";
+import { ArrowRight, Gauge, Lock, ShieldCheck, Wand2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SiteHeader } from "@/components/SiteHeader";
@@ -46,7 +46,8 @@ export default function ToolsIndex() {
           </p>
           <p className="flex items-center gap-2 text-xs text-muted-foreground">
             <Lock className="size-3.5 text-success" />
-            No account, no uploads, no per-file limits.
+            No uploads and no per-file limits. Use every tool signed out, or sign in to
+            keep a history.
           </p>
         </header>
 
@@ -74,6 +75,52 @@ export default function ToolsIndex() {
               </Button>
             ))}
           </div>
+        </section>
+
+        <section className="mt-12 grid gap-3 sm:grid-cols-3">
+          {[
+            {
+              icon: <Gauge className="size-4" />,
+              title: "Your workspace",
+              body: "Sign in to keep a run history, save requirement presets and see how much you saved.",
+              to: "/workspace",
+              cta: "Open the workspace",
+            },
+            {
+              icon: <ShieldCheck className="size-4" />,
+              title: "Admin console",
+              body: "Manage accounts and roles, enable tools, publish global presets and post announcements.",
+              to: "/admin",
+              cta: "Open the console",
+            },
+            {
+              icon: <Lock className="size-4" />,
+              title: "How processing works",
+              body: "Exactly what runs locally, and the small amount of metadata an account stores.",
+              to: "/privacy",
+              cta: "Read the details",
+            },
+          ].map((item) => (
+            <div
+              key={item.title}
+              className="flex flex-col gap-2 rounded-xl border bg-card p-4"
+            >
+              <span className="flex size-9 items-center justify-center rounded-lg border bg-secondary text-primary">
+                {item.icon}
+              </span>
+              <span className="text-sm font-semibold tracking-tight">{item.title}</span>
+              <span className="text-xs leading-relaxed text-muted-foreground">
+                {item.body}
+              </span>
+              <Link
+                to={item.to}
+                className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-primary underline-offset-4 hover:underline"
+              >
+                {item.cta}
+                <ArrowRight className="size-3.5" />
+              </Link>
+            </div>
+          ))}
         </section>
 
         <section className="mt-12">

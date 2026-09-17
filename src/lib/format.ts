@@ -241,6 +241,26 @@ export async function downloadAsZip(
   downloadBlob(blob, zipName);
 }
 
+/** "just now", "14m ago", "3h ago", "6d ago" or a short date. */
+export function formatRelativeTime(timestamp: number | null | undefined): string {
+  if (!timestamp) return "—";
+  const diff = Date.now() - timestamp;
+  if (diff < 0) return "just now";
+  const seconds = Math.floor(diff / 1000);
+  if (seconds < 60) return "just now";
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d ago`;
+  return new Date(timestamp).toLocaleDateString(undefined, {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
 /* -------------------------------------------------------------------------- */
 /*  Misc                                                                       */
 /* -------------------------------------------------------------------------- */

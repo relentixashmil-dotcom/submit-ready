@@ -38,6 +38,7 @@ import {
   uid,
 } from "@/lib/format";
 import { usePack } from "@/context/pack";
+import { useRunLog } from "@/hooks/use-run-log";
 import { cn } from "@/lib/utils";
 
 interface Preset {
@@ -98,6 +99,7 @@ export function ImageResizerTool() {
   const itemsRef = useRef(items);
   itemsRef.current = items;
   const { consumeHandoff } = usePack();
+  const logRun = useRunLog();
   const handoffUsed = useRef(false);
 
   const parsedWidth = Number.parseInt(width, 10) || 0;
@@ -199,6 +201,8 @@ export function ImageResizerTool() {
     const list = [...itemsRef.current];
     if (list.length === 0) return;
     setBusy(true);
+    const completed: { name: string; inputBytes: number; outputBytes: number; size: string }[] =
+      [];
     for (let index = 0; index < list.length; index += 1) {
       const item = list[index];
       if (item.status === "done" && item.configKey === configKey) continue;
@@ -209,6 +213,12 @@ export function ImageResizerTool() {
         const output = await resizeImage(item.file, resizeOptions());
         const afterUrl = await createPreviewDataUrl(output.blob, 320);
         list[index] = { ...item, status: "done", configKey, output, afterUrl, error: null };
+        completed.push({
+          name: item.file.name,
+          inputBytes: item.file.size,
+          outputBytes: output.blob.size,
+          size: `${output.width} × ${output.height} px`,
+        });
       } catch (error) {
         const message = describeError(error, "This image couldn't be resized.");
         list[index] = { ...item, status: "error", configKey, error: message };
@@ -219,7 +229,22 @@ export function ImageResizerTool() {
     }
     setProgress(null);
     setBusy(false);
-  }, [configKey, resizeOptions]);
+
+    if (completed.length > 0) {
+      void logRun({
+        tool: "image-resize",
+        label:
+          completed.length === 1
+            ? completed[0].name
+            : `${completed.length} images`,
+        fileCount: completed.length,
+        inputBytes: completed.reduce((sum, entry) => sum + entry.inputBytes, 0),
+        outputBytes: completed.reduce((sum, entry) => sum + entry.outputBytes, 0),
+        status: "ok",
+        detail: completed[0]?.size,
+      });
+    }
+  }, [configKey, logRun, resizeOptions]);
 
   useEffect(() => {
     if (items.length === 0) return;

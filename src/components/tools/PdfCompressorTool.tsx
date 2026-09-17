@@ -35,6 +35,7 @@ import {
   reductionPercent,
   suffixName,
 } from "@/lib/format";
+import { useRunLog } from "@/hooks/use-run-log";
 import { cn } from "@/lib/utils";
 
 interface SourceFile {
@@ -70,6 +71,7 @@ export function PdfCompressorTool({
   >(null);
   const [error, setError] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const logRun = useRunLog();
 
   const configKey = useMemo(
     () => `${level}|${target ?? "none"}`,
@@ -170,6 +172,18 @@ export function PdfCompressorTool({
           description: `The smallest version this browser could produce is ${formatBytes(output.finalBytes)}.`,
         });
       }
+
+      void logRun({
+        tool: "pdf-compress",
+        label: source.file.name,
+        fileCount: 1,
+        inputBytes: output.originalBytes,
+        outputBytes: output.finalBytes,
+        status: output.metTarget ? "ok" : "partial",
+        detail: `${COMPRESSION_LEVELS[level].label} · ${
+          target ? `target ${formatBytes(target)}` : "no target"
+        }`,
+      });
     } catch (err) {
       if (err instanceof Error && err.name === "AbortError") {
         toast("Compression cancelled");
@@ -186,7 +200,7 @@ export function PdfCompressorTool({
       setProgress(null);
       setBusy(false);
     }
-  }, [configKey, level, source, target]);
+  }, [configKey, level, logRun, source, target]);
 
   useEffect(() => () => abortRef.current?.abort(), []);
 

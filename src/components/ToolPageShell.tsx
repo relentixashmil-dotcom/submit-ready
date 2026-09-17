@@ -1,6 +1,9 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router";
-import { ChevronRight, Lock, Sparkles } from "lucide-react";
+import { useQuery } from "convex/react";
+import { ChevronRight, Gauge, Lock, Sparkles } from "lucide-react";
+import { api } from "@/convex/_generated/api";
+import { useAuth } from "@/hooks/use-auth";
 import { Badge } from "@/components/ui/badge";
 import {
   Accordion,
@@ -38,6 +41,13 @@ export function ToolPageShell({
 }) {
   useToolSeo(page);
   const tool = TOOLS[page.tool];
+  const { isAuthenticated } = useAuth();
+  // Administrators can rename or re-badge a tool in the console; those edits win.
+  const registry = useQuery(api.tools.list);
+  const entry = registry?.find((row) => row.slug === page.tool);
+  const displayName = entry?.name ?? tool.name;
+  const displayBadge = entry?.badge || page.badge;
+  const displayTagline = entry?.tagline ?? tool.blurb;
 
   const related = page.related.map((path) => {
     const match = SEO_PAGES.find((entry) => entry.path === path);
@@ -64,14 +74,14 @@ export function ToolPageShell({
             Tools
           </Link>
           <ChevronRight className="size-3 text-muted-foreground" />
-          <span className="font-medium">{tool.name}</span>
+          <span className="font-medium">{displayName}</span>
         </nav>
 
         <header className="mt-6 flex flex-col gap-4">
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant="secondary" className="gap-1.5">
               <Sparkles className="size-3" />
-              {page.badge}
+              {displayBadge}
             </Badge>
             <span className="font-mono text-xs text-muted-foreground">
               accepts {tool.accepts}
@@ -81,12 +91,38 @@ export function ToolPageShell({
             {page.h1}
           </h1>
           <p className="max-w-2xl text-base leading-relaxed text-muted-foreground">
-            {page.lede}
+            {displayTagline}
           </p>
-          <p className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Lock className="size-3.5 text-success" />
-            Your files are processed in your browser whenever technically possible.
-          </p>
+          <div className="flex flex-col gap-1.5">
+            <p className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Lock className="size-3.5 text-success" />
+              Your files are processed in your browser whenever technically possible.
+            </p>
+            <p className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Gauge className="size-3.5 text-primary" />
+              {isAuthenticated ? (
+                <>
+                  This run is recorded in your workspace — sizes and outcome only.{" "}
+                  <Link
+                    to="/workspace"
+                    className="font-medium text-primary underline-offset-4 hover:underline"
+                  >
+                    Open workspace
+                  </Link>
+                </>
+              ) : (
+                <>
+                  Sign in to keep a history of what you prepared.{" "}
+                  <Link
+                    to="/auth"
+                    className="font-medium text-primary underline-offset-4 hover:underline"
+                  >
+                    Create an account
+                  </Link>
+                </>
+              )}
+            </p>
+          </div>
         </header>
 
         <div className="mt-8">{children}</div>

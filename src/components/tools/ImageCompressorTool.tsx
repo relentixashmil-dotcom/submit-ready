@@ -30,6 +30,7 @@ import {
   uid,
 } from "@/lib/format";
 import { usePack } from "@/context/pack";
+import { useRunLog } from "@/hooks/use-run-log";
 import { cn } from "@/lib/utils";
 
 const FORMAT_OPTIONS: { value: OutputFormat; label: string }[] = [
@@ -81,6 +82,7 @@ export function ImageCompressorTool({
   const itemsRef = useRef(items);
   itemsRef.current = items;
   const { consumeHandoff } = usePack();
+  const logRun = useRunLog();
   const handoffUsed = useRef(false);
 
   const configKey = useMemo(
@@ -140,6 +142,11 @@ export function ImageCompressorTool({
     if (list.length === 0) return;
     setBusy(true);
 
+    // Only files that were actually compressed in this pass are recorded, so
+    // tweaking a setting logs a new operation rather than repeating the old one.
+    const completed: { name: string; inputBytes: number; outputBytes: number; met: boolean }[] =
+      [];
+
     for (let index = 0; index < list.length; index += 1) {
       const item = list[index];
       if (item.status === "done" && item.configKey === configKey) continue;
@@ -164,6 +171,12 @@ export function ImageCompressorTool({
           afterUrl,
           error: null,
         };
+        completed.push({
+          name: item.file.name,
+          inputBytes: item.file.size,
+          outputBytes: output.blob.size,
+          met: output.metTarget,
+        });
       } catch (error) {
         const message = describeError(
           error,
@@ -183,7 +196,22 @@ export function ImageCompressorTool({
 
     setProgress(null);
     setBusy(false);
-  }, [configKey, format, maxDimension, quality, target]);
+
+    if (completed.length > 0) {
+      void logRun({
+        tool: "image-compress",
+        label:
+          completed.length === 1
+            ? completed[0].name
+            : `${completed.length} images`,
+        fileCount: completed.length,
+        inputBytes: completed.reduce((sum, entry) => sum + entry.inputBytes, 0),
+        outputBytes: completed.reduce((sum, entry) => sum + entry.outputBytes, 0),
+        status: completed.every((entry) => entry.met) ? "ok" : "partial",
+        detail: target ? `Target ${formatBytes(target)}` : "Best quality",
+      });
+    }
+  }, [configKey, format, logRun, maxDimension, quality, target]);
 
   useEffect(() => {
     if (items.length === 0) return;

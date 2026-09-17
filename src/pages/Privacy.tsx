@@ -50,6 +50,29 @@ const SERVER = [
     title: "Crash diagnostics",
     body: "If the interface hits a JavaScript error, the hosting platform may receive the error message and stack trace so the bug can be fixed. File names and file contents are never included.",
   },
+  {
+    title: "Account and run records",
+    body: "Signing in creates an account record (your email address, an optional display name, a role). Each completed operation adds a summary row: the tool used, a filename, file counts, byte counts and the outcome. No document data is part of that record.",
+  },
+];
+
+const STORED = [
+  {
+    title: "An account record",
+    body: "Your email address, the role you hold (user, member or admin) and, if you set one, a display name.",
+  },
+  {
+    title: "Run summaries",
+    body: "For every operation you complete while signed in: the tool, a filename, how many files, the input and output byte totals, and whether it fully met the target.",
+  },
+  {
+    title: "Presets you save",
+    body: "The requirement presets attached to your account — file types, size limits, pixel dimensions and page caps.",
+  },
+  {
+    title: "Nothing else",
+    body: "No document bytes, no thumbnails, no previews and no copies of the files you downloaded. Administrators of this deployment can see the summaries above; they cannot see your documents.",
+  },
 ];
 
 export default function Privacy() {
@@ -87,9 +110,9 @@ export default function Privacy() {
           </h2>
           <p className="text-sm leading-relaxed text-muted-foreground">
             Every tool listed here runs entirely in the page you are looking at. No file
-            is ever sent to a SubmitReady server, because there is no SubmitReady server
-            handling files — there is no upload endpoint, no storage bucket and no
-            database of documents.
+            is ever sent to a server, because there is no upload endpoint and no storage
+            bucket for documents. The deployment does keep a database — of accounts and
+            run summaries, never of your files.
           </p>
           <div className="flex flex-col gap-3">
             {LOCAL.map((item) => (
@@ -126,6 +149,27 @@ export default function Privacy() {
 
         <section className="mt-10 flex flex-col gap-4">
           <h2 className="flex items-center gap-2 text-xl font-bold tracking-tight">
+            <Server className="size-5 text-primary" />
+            What an account stores
+          </h2>
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            Accounts are optional and exist so you can pick up where you left off. This is
+            the complete list of what is kept for you, and what an administrator can see.
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {STORED.map((item) => (
+              <div key={item.title} className="rounded-xl border bg-card p-4">
+                <h3 className="text-sm font-semibold tracking-tight">{item.title}</h3>
+                <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                  {item.body}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="mt-10 flex flex-col gap-4">
+          <h2 className="flex items-center gap-2 text-xl font-bold tracking-tight">
             <AlertTriangle className="size-5 text-warning" />
             Honest limits
           </h2>
@@ -148,9 +192,10 @@ export default function Privacy() {
               rather than producing a broken file.
             </p>
             <p>
-              <span className="font-medium text-foreground">Nothing is stored for you.</span>{" "}
-              There is no account and no history. If you close the tab, the Application Pack
-              is gone. Download what you need before you leave.
+              <span className="font-medium text-foreground">Prepared files are never stored.</span>{" "}
+              Closing the tab discards the Application Pack, whatever your account settings
+              are. Download what you need before you leave, and if you prefer to keep no
+              record at all, use a guest session or stay signed out.
             </p>
           </div>
         </section>
@@ -162,8 +207,8 @@ export default function Privacy() {
           </h2>
           <p className="text-sm leading-relaxed text-muted-foreground">
             Your files are read, rewritten and handed back by your own browser; the network
-            is used to load the app and its rendering assets, and to report interface errors
-            — never your documents.
+            is used to load the app and its rendering assets, to store account and run
+            summaries, and to report interface errors — never your documents.
           </p>
           <div className="flex flex-wrap gap-2">
             <Button asChild variant="outline" className="gap-2">

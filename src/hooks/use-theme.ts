@@ -1,13 +1,13 @@
 import { useCallback, useSyncExternalStore } from "react";
 
-export type Theme = "light" | "dark";
+export type Theme = "dark" | "light";
 
 const STORAGE_KEY = "submitready-theme";
 const listeners = new Set<() => void>();
 
 function currentTheme(): Theme {
-  if (typeof document === "undefined") return "light";
-  return document.documentElement.classList.contains("dark") ? "dark" : "light";
+  if (typeof document === "undefined") return "dark";
+  return document.documentElement.classList.contains("light") ? "light" : "dark";
 }
 
 function emit() {
@@ -21,7 +21,9 @@ function subscribe(listener: () => void) {
 
 function apply(theme: Theme) {
   const root = document.documentElement;
+  // Dark is the default surface; lighter values live behind `.light`.
   root.classList.toggle("dark", theme === "dark");
+  root.classList.toggle("light", theme === "light");
   try {
     window.localStorage.setItem(STORAGE_KEY, theme);
   } catch {
@@ -32,7 +34,7 @@ function apply(theme: Theme) {
 
 /** Reads the theme applied by the inline bootstrap script in index.html. */
 export function useTheme() {
-  const theme = useSyncExternalStore(subscribe, currentTheme, () => "light");
+  const theme = useSyncExternalStore(subscribe, currentTheme, () => "dark");
 
   const setTheme = useCallback((next: Theme) => apply(next), []);
   const toggleTheme = useCallback(

@@ -5,9 +5,13 @@ import {
   BadgeCheck,
   CheckCircle2,
   ClipboardCheck,
+  Gauge,
+  History,
   Lock,
   ShieldCheck,
+  Sliders,
   Sparkles,
+  UserRoundPlus,
   Wand2,
   XCircle,
 } from "lucide-react";
@@ -24,6 +28,8 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { ToolCard } from "@/components/ToolCard";
 import { toolIcon } from "@/components/ToolPageShell";
 import { useSeo } from "@/hooks/use-seo";
+import { useAuth } from "@/hooks/use-auth";
+import { useAccount } from "@/hooks/use-account";
 import {
   HOME_CARDS,
   POPULAR_REQUIREMENTS,
@@ -63,14 +69,49 @@ const STEPS = [
   },
 ];
 
-const HOME_FAQS = [
+const ACCOUNT_FEATURES = [
   {
-    q: "Are my documents uploaded to a server?",
-    a: "No. Compression, resizing, PDF creation, merging, splitting and validation all run in your browser using canvas and JavaScript PDF libraries. Your files stay on your device. The one thing the browser must download is the app itself and its PDF rendering engine.",
+    icon: <History className="size-4" />,
+    title: "Run history that stays put",
+    body: "Every compression, conversion and merge is recorded as a summary you can look back at from your workspace.",
   },
   {
-    q: "Is SubmitReady really free?",
-    a: "Yes. There is no account, no trial and no paywalled export. Because processing happens on your device, there are no per-file server costs to pass on.",
+    icon: <Sliders className="size-4" />,
+    title: "Requirement presets",
+    body: "Save the exact limits a form asked for — type, size cap, pixel dimensions, page count — and reuse them in one click.",
+  },
+  {
+    icon: <Gauge className="size-4" />,
+    title: "Totals you can act on",
+    body: "See how many files you prepared, how much data went in and out, and how much you saved overall.",
+  },
+  {
+    icon: <ShieldCheck className="size-4" />,
+    title: "An admin area for teams",
+    body: "The first account on a deployment can take admin and run the whole thing from one console.",
+  },
+];
+
+const HOME_FAQS = [
+  {
+    q: "Do I need an account to use SubmitReady?",
+    a: "No. Every tool works without signing in, and your files never leave your browser either way. An account adds a workspace: run history, saved requirement presets and a central place to manage your settings. Guest sessions are offered too, and they keep that history in the browser only.",
+  },
+  {
+    q: "Are my documents uploaded to a server?",
+    a: "Not as files. Compression, resizing, PDF creation, merging, splitting and validation all run in your browser using canvas and JavaScript PDF libraries. Accounts store summaries — a filename, byte counts and the outcome — so the history and admin views have something to show. Document contents are never stored.",
+  },
+  {
+    q: "Who can see my activity?",
+    a: "You can, in your workspace. Administrators of the deployment can see the same summaries across accounts in the admin console, because that is what the console is for. If you would rather leave no trace at all, use a guest session or stay signed out.",
+  },
+  {
+    q: "Is SubmitReady free?",
+    a: "Yes. There is no trial and no paywalled export. Because processing happens on your device, there are no per-file server costs to pass on — which is also why the tools can stay free.",
+  },
+  {
+    q: "What is the admin console for?",
+    a: "It is a control room for the deployment: manage accounts and roles, enable or retire tools, publish the global requirement presets everyone sees, post a site-wide announcement, and watch aggregate activity. The first account on a fresh deployment can claim admin from the console or from the workspace.",
   },
   {
     q: "What if my file can't reach the required size?",
@@ -80,23 +121,58 @@ const HOME_FAQS = [
     q: "Does compressing a PDF break the text?",
     a: "It depends on the level. Light rebuilds the file structure losslessly, so text stays selectable. Balanced, Strong and Extreme re-render pages as high-quality images, which shrinks scans dramatically but turns text into pixels. The trade-off is stated on every level.",
   },
-  {
-    q: "Which is the fastest way to prepare a whole application?",
-    a: "The Application Pack. Add every document, and each one is checked against its own size, dimension and page rules with one-click fixes and a single final download.",
-  },
 ];
 
-function RequirementPreview() {
+/** Small technical readout used in the hero panel. */
+function ReadoutRow({
+  label,
+  value,
+  tone = "muted",
+}: {
+  label: string;
+  value: string;
+  tone?: "muted" | "success" | "warning";
+}) {
+  return (
+    <div className="flex items-center gap-3 border-b border-border/60 py-1.5 last:border-b-0">
+      <span className="mono-label w-28 shrink-0">{label}</span>
+      <span
+        className={cn(
+          "truncate font-mono text-xs",
+          tone === "success"
+            ? "text-success"
+            : tone === "warning"
+              ? "text-warning"
+              : "text-foreground",
+        )}
+      >
+        {value}
+      </span>
+    </div>
+  );
+}
+
+function ConsolePreview() {
   const checks = [
-    { label: "File type", detail: "JPG accepted", ok: true },
-    { label: "Maximum size", detail: "4.2 MB → 96 KB", ok: true },
-    { label: "Dimensions", detail: "350 × 350 px", ok: true },
+    { label: "type", detail: "JPG accepted", ok: true },
+    { label: "max size", detail: "4.2 MB → 96 KB", ok: true },
+    { label: "dimensions", detail: "350 × 350 px", ok: true },
   ];
 
   return (
-    <div className="rounded-xl border bg-card p-4 sm:p-5">
+    <div className="flex flex-col gap-4 rounded-2xl border bg-card p-4 glow-soft sm:p-5">
+      <div className="flex items-center gap-2 border-b pb-3">
+        <span className="flex size-6 items-center justify-center rounded-md border bg-secondary">
+          <ClipboardCheck className="size-3.5 text-primary" />
+        </span>
+        <span className="mono-label">application pack</span>
+        <span className="ml-auto font-mono text-[11px] text-muted-foreground">
+          photograph.jpg
+        </span>
+      </div>
+
       <div className="flex items-center gap-3">
-        <span className="flex size-11 items-center justify-center rounded-lg border bg-muted/40 text-lg">
+        <span className="flex size-11 items-center justify-center rounded-lg border bg-secondary text-lg">
           📷
         </span>
         <div className="flex min-w-0 flex-1 flex-col">
@@ -113,29 +189,28 @@ function RequirementPreview() {
         </Badge>
       </div>
 
-      <ul className="mt-4 flex flex-col gap-2">
+      <div className="rounded-lg border bg-background/60 px-3 py-1.5">
         {checks.map((check, index) => (
-          <motion.li
+          <motion.div
             key={check.label}
             initial={{ opacity: 0, x: -8 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.5 + index * 0.35, duration: 0.3 }}
-            className="flex items-center gap-2 text-xs"
+            transition={{ delay: 0.5 + index * 0.3, duration: 0.3 }}
           >
-            <CheckCircle2 className="size-3.5 shrink-0 text-success" />
-            <span className="font-medium">{check.label}</span>
-            <span className="ml-auto font-mono text-muted-foreground">
-              {check.detail}
-            </span>
-          </motion.li>
+            <ReadoutRow
+              label={check.label}
+              value={check.detail}
+              tone="success"
+            />
+          </motion.div>
         ))}
-      </ul>
+      </div>
 
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1.7, duration: 0.4 }}
-        className="mt-4 flex items-center gap-2 rounded-lg border border-success/40 bg-success/5 px-3 py-2.5"
+        transition={{ delay: 1.5, duration: 0.4 }}
+        className="flex items-center gap-2 rounded-lg border border-success/40 bg-success/5 px-3 py-2.5"
       >
         <BadgeCheck className="size-4 shrink-0 text-success" />
         <span className="text-sm font-semibold tracking-tight">
@@ -143,27 +218,45 @@ function RequirementPreview() {
         </span>
       </motion.div>
 
-      <motion.p
+      <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 2.1, duration: 0.4 }}
-        className="mt-3 flex items-center gap-1.5 text-[11px] text-muted-foreground"
+        transition={{ delay: 1.9, duration: 0.4 }}
+        className="flex flex-col gap-2 rounded-lg border bg-background/60 p-3"
       >
-        <Lock className="size-3 text-success" />
-        processed in this browser · nothing uploaded
-      </motion.p>
+        <span className="mono-label">workspace.log</span>
+        <div className="flex items-center gap-2 font-mono text-[11px] text-muted-foreground">
+          <CheckCircle2 className="size-3 text-success" />
+          image-compress · 1 file · 92% smaller
+        </div>
+        <div className="flex items-center gap-2 font-mono text-[11px] text-muted-foreground">
+          <CheckCircle2 className="size-3 text-success" />
+          image-resize · 350 × 350 px
+        </div>
+        <div className="flex items-center gap-2 font-mono text-[11px] text-muted-foreground">
+          <Lock className="size-3 text-success" />
+          files processed in this browser
+        </div>
+      </motion.div>
     </div>
   );
 }
 
 export default function Landing() {
+  const { isAuthenticated } = useAuth();
+  const account = useAccount();
+
   useSeo({
     title: "SubmitReady — make any document ready to submit",
     description:
-      "Free browser-based toolkit for upload requirements: compress and resize images, convert images to PDF, compress, merge and split PDFs, and validate a whole application pack. No account, no uploads.",
+      "A browser-based toolkit for upload requirements: compress and resize images, convert images to PDF, compress, merge and split PDFs, and validate a whole application pack. Free accounts add a workspace and saved presets.",
     path: "/",
     faqs: HOME_FAQS,
   });
+
+  const primaryCta = isAuthenticated
+    ? { to: "/workspace", label: "Open your workspace" }
+    : { to: "/auth", label: "Create a free account" };
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -182,11 +275,15 @@ export default function Landing() {
               >
                 <Badge variant="secondary" className="gap-1.5">
                   <Sparkles className="size-3" />
-                  Free · no account
+                  Free · v1.0
                 </Badge>
                 <Badge variant="outline" className="gap-1.5">
                   <Lock className="size-3 text-success" />
-                  Files processed in your browser
+                  Processed in your browser
+                </Badge>
+                <Badge variant="outline" className="gap-1.5">
+                  <ShieldCheck className="size-3 text-primary" />
+                  Accounts &amp; admin console
                 </Badge>
               </motion.div>
 
@@ -207,7 +304,8 @@ export default function Landing() {
               >
                 Make any document ready to submit. Compress and resize photos and
                 signatures, turn images into a PDF, shrink documents to an exact size,
-                merge or split files — and check every requirement before you upload.
+                merge or split files — then check every requirement before you upload.
+                Sign in and the whole run is logged in your workspace.
               </motion.p>
 
               <motion.div
@@ -217,18 +315,40 @@ export default function Landing() {
                 className="flex flex-wrap gap-3"
               >
                 <Button asChild size="lg" className="gap-2">
+                  <Link to={primaryCta.to}>
+                    {isAuthenticated ? (
+                      <Gauge className="size-4" />
+                    ) : (
+                      <UserRoundPlus className="size-4" />
+                    )}
+                    {primaryCta.label}
+                  </Link>
+                </Button>
+                <Button asChild size="lg" variant="outline" className="gap-2">
                   <Link to="/application-pack">
                     <ClipboardCheck className="size-4" />
                     Prepare an application pack
                   </Link>
                 </Button>
-                <Button asChild size="lg" variant="outline" className="gap-2">
-                  <Link to="/image-compressor">
-                    Compress an image
-                    <ArrowRight className="size-4" />
-                  </Link>
-                </Button>
               </motion.div>
+
+              {account.isAdmin ? (
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.4, delay: 0.24 }}
+                  className="flex items-center gap-2 text-xs text-muted-foreground"
+                >
+                  <ShieldCheck className="size-3.5 text-primary" />
+                  You have admin access on this deployment —{" "}
+                  <Link
+                    to="/admin"
+                    className="font-medium text-primary underline-offset-4 hover:underline"
+                  >
+                    open the console
+                  </Link>
+                </motion.p>
+              ) : null}
 
               <motion.dl
                 initial={{ opacity: 0 }}
@@ -239,10 +359,12 @@ export default function Landing() {
                 {[
                   { value: "7", label: "tools, one workflow" },
                   { value: "0", label: "files uploaded" },
-                  { value: "100%", label: "free, no sign-up" },
+                  { value: "5s", label: "to your first result" },
                 ].map((stat) => (
                   <div key={stat.label} className="flex flex-col gap-0.5">
-                    <dt className="text-2xl font-bold tracking-tight">{stat.value}</dt>
+                    <dt className="font-mono text-2xl font-bold tracking-tight text-primary">
+                      {stat.value}
+                    </dt>
                     <dd className="text-xs text-muted-foreground">{stat.label}</dd>
                   </div>
                 ))}
@@ -254,7 +376,7 @@ export default function Landing() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.15 }}
             >
-              <RequirementPreview />
+              <ConsolePreview />
             </motion.div>
           </div>
         </section>
@@ -263,7 +385,7 @@ export default function Landing() {
         <section className="border-b bg-surface/50">
           <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-8 sm:px-6">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <h2 className="text-sm font-semibold tracking-tight">
+              <h2 className="font-mono text-sm font-semibold tracking-tight">
                 Jump straight into a tool
               </h2>
               <Link
@@ -294,9 +416,10 @@ export default function Landing() {
           </div>
         </section>
 
-        {/* What are you working on ------------------------------------------ */}
+        {/* Start with what you have ----------------------------------------- */}
         <section className="mx-auto w-full max-w-6xl px-4 py-14 sm:px-6">
           <motion.div {...fadeUp} className="flex flex-col gap-2">
+            <p className="mono-label">choose your entry point</p>
             <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
               Start with what you have
             </h2>
@@ -324,17 +447,69 @@ export default function Landing() {
                 size="large"
                 className={cn(
                   card.title === "Application Pack" &&
-                    "border-primary/50 bg-primary/[0.03] sm:col-span-2 lg:col-span-1",
+                    "border-primary/50 bg-primary/[0.04] sm:col-span-2 lg:col-span-1",
                 )}
               />
             ))}
           </div>
         </section>
 
-        {/* All tools -------------------------------------------------------- */}
+        {/* Accounts --------------------------------------------------------- */}
         <section className="border-y bg-surface/40">
+          <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-14 sm:px-6 lg:grid-cols-[1fr_1.1fr] lg:items-center">
+            <motion.div {...fadeUp} className="flex flex-col gap-4">
+              <Badge variant="secondary" className="w-fit gap-1.5">
+                <ShieldCheck className="size-3" />
+                Accounts, optional but useful
+              </Badge>
+              <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
+                Every tool works signed out. Signing in gives you a memory.
+              </h2>
+              <p className="max-w-xl text-sm leading-relaxed text-muted-foreground">
+                Email sign-up takes a six-digit code — no password to invent or reset.
+                The first account on a deployment can claim admin and manage accounts,
+                tools, presets and announcements from one console.
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <Button asChild className="gap-2">
+                  <Link to={primaryCta.to}>
+                    {primaryCta.label}
+                    <ArrowRight className="size-4" />
+                  </Link>
+                </Button>
+                <Button asChild variant="outline">
+                  <Link to="/privacy">What gets stored</Link>
+                </Button>
+              </div>
+            </motion.div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              {ACCOUNT_FEATURES.map((feature) => (
+                <motion.div
+                  key={feature.title}
+                  {...fadeUp}
+                  className="flex flex-col gap-2 rounded-xl border bg-card p-4"
+                >
+                  <span className="flex size-9 items-center justify-center rounded-lg border bg-secondary text-primary">
+                    {feature.icon}
+                  </span>
+                  <span className="text-sm font-semibold tracking-tight">
+                    {feature.title}
+                  </span>
+                  <span className="text-xs leading-relaxed text-muted-foreground">
+                    {feature.body}
+                  </span>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* All tools -------------------------------------------------------- */}
+        <section className="border-b">
           <div className="mx-auto w-full max-w-6xl px-4 py-14 sm:px-6">
             <motion.div {...fadeUp} className="flex flex-col gap-2">
+              <p className="mono-label">the full registry</p>
               <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
                 Every tool in the toolkit
               </h2>
@@ -368,6 +543,7 @@ export default function Landing() {
         {/* Steps ------------------------------------------------------------ */}
         <section className="mx-auto w-full max-w-6xl px-4 py-14 sm:px-6">
           <motion.div {...fadeUp} className="flex flex-col gap-2">
+            <p className="mono-label">pipeline</p>
             <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
               Built around how upload forms actually behave
             </h2>
@@ -405,6 +581,7 @@ export default function Landing() {
         <section className="border-y bg-surface/40">
           <div className="mx-auto w-full max-w-6xl px-4 py-14 sm:px-6">
             <motion.div {...fadeUp} className="flex flex-col gap-2">
+              <p className="mono-label">common limits</p>
               <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
                 Popular requirements
               </h2>
@@ -457,9 +634,11 @@ export default function Landing() {
                 Your files are processed in your browser
               </h2>
               <p className="max-w-3xl text-sm leading-relaxed text-muted-foreground">
-                Every tool in SubmitReady runs on your device. There is no upload step,
-                no storage bucket and no account — so there is nothing to leak, and
-                nothing left behind after you close the tab.
+                Every tool runs on your device: there is no upload step and no storage
+                bucket for documents. When you are signed in we record a summary of what
+                you did — a filename, the byte counts, the outcome — so your workspace
+                and the admin console have something to show. The contents never leave
+                the tab.
               </p>
             </div>
 
@@ -470,8 +649,8 @@ export default function Landing() {
                   body: "Compression, resizing and PDF work use browser APIs — canvas, JavaScript PDF libraries and a local rendering engine.",
                 },
                 {
-                  title: "No accounts, no database",
-                  body: "The Application Pack lives in the tab you're using. Reload it and the pack is gone, by design.",
+                  title: "Metadata, not documents",
+                  body: "An account stores filenames, sizes and outcomes. Prepared files live in the tab you're using and disappear when you close it.",
                 },
                 {
                   title: "Honest limits",
@@ -521,18 +700,19 @@ export default function Landing() {
         {/* Final CTA -------------------------------------------------------- */}
         <section className="border-t bg-primary text-primary-foreground">
           <div className="mx-auto flex w-full max-w-6xl flex-col items-start gap-5 px-4 py-12 sm:px-6 sm:py-14">
+            <p className="mono-label !text-primary-foreground/70">ready when you are</p>
             <h2 className="max-w-2xl text-2xl font-bold tracking-tight sm:text-3xl">
               Stop guessing whether your file will be accepted.
             </h2>
             <p className="max-w-2xl text-sm leading-relaxed opacity-90">
               Add your documents, set the limits from the form, and download files that
-              are checked before you upload them.
+              are checked before you upload them. Sign in if you want the history kept.
             </p>
             <div className="flex flex-wrap gap-3">
               <Button asChild size="lg" variant="secondary" className="gap-2">
-                <Link to="/application-pack">
-                  <ClipboardCheck className="size-4" />
-                  Start an application pack
+                <Link to={primaryCta.to}>
+                  {primaryCta.label}
+                  <ArrowRight className="size-4" />
                 </Link>
               </Button>
               <Button
@@ -541,9 +721,9 @@ export default function Landing() {
                 variant="outline"
                 className="gap-2 border-primary-foreground/40 bg-transparent text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
               >
-                <Link to="/tools">
-                  Browse all tools
-                  <ArrowRight className="size-4" />
+                <Link to="/application-pack">
+                  <ClipboardCheck className="size-4" />
+                  Start an application pack
                 </Link>
               </Button>
             </div>

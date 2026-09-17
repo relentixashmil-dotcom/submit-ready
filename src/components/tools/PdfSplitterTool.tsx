@@ -30,6 +30,7 @@ import {
   nextFrame,
   readAsArrayBuffer,
 } from "@/lib/format";
+import { useRunLog } from "@/hooks/use-run-log";
 import { cn } from "@/lib/utils";
 
 type Mode = "selected" | "ranges" | "every";
@@ -65,6 +66,7 @@ export function PdfSplitterTool() {
 
   const pdfRef = useRef<Awaited<ReturnType<typeof openPdfForRendering>> | null>(null);
   const renderToken = useRef(0);
+  const logRun = useRunLog();
 
   const releasePdf = useCallback(async () => {
     const current = pdfRef.current;
@@ -226,6 +228,20 @@ export function PdfSplitterTool() {
           description: "Pages were copied without unlocking the file — check the result.",
         });
       }
+
+      const exportedPages = result.outputs.reduce(
+        (sum, output) => sum + output.pageCount,
+        0,
+      );
+      void logRun({
+        tool: "pdf-split",
+        label: file.name,
+        fileCount: result.outputs.length,
+        inputBytes: file.size,
+        outputBytes: result.outputs.reduce((sum, output) => sum + output.bytes.byteLength, 0),
+        status: result.encrypted ? "partial" : "ok",
+        detail: `${exportedPages} of ${pageCount} pages exported`,
+      });
     } catch (err) {
       const message = describeError(err, "The selected pages couldn't be exported.");
       setError(message);
@@ -233,7 +249,7 @@ export function PdfSplitterTool() {
     } finally {
       setBusy(false);
     }
-  }, [bytes, file, mode, pageCount, parsedRanges, selected]);
+  }, [bytes, file, logRun, mode, pageCount, parsedRanges, selected]);
 
   const visiblePages = Array.from(
     { length: Math.min(pageCount, limit) },

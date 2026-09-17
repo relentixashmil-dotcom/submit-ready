@@ -17,6 +17,7 @@ import {
   uid,
 } from "@/lib/format";
 import { usePack } from "@/context/pack";
+import { useRunLog } from "@/hooks/use-run-log";
 
 interface MergeItem {
   id: string;
@@ -38,6 +39,7 @@ interface MergeResultState {
 export function PdfMergerTool() {
   const [items, setItems] = useState<MergeItem[]>([]);
   const [busy, setBusy] = useState(false);
+  const logRun = useRunLog();
   const [reading, setReading] = useState(0);
   const [result, setResult] = useState<MergeResultState | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -143,6 +145,16 @@ export function PdfMergerTool() {
           description: `${merged.encryptedFiles.join(", ")} — pages were copied, but check the result.`,
         });
       }
+
+      void logRun({
+        tool: "pdf-merge",
+        label: `${merged.fileCount} PDFs into one file`,
+        fileCount: merged.fileCount,
+        inputBytes: items.reduce((sum, item) => sum + item.file.size, 0),
+        outputBytes: blob.size,
+        status: merged.encryptedFiles.length > 0 ? "partial" : "ok",
+        detail: `${merged.pageCount} pages`,
+      });
     } catch (err) {
       const message = describeError(
         err,
@@ -153,7 +165,7 @@ export function PdfMergerTool() {
     } finally {
       setBusy(false);
     }
-  }, [items, order]);
+  }, [items, logRun, order]);
 
   const listItems: FileListItem[] = items.map((item) => ({
     id: item.id,
