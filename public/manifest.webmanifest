@@ -1,0 +1,17 @@
+{
+  "name": "SubmitReady — document preparation toolkit",
+  "short_name": "SubmitReady",
+  "description": "Compress and resize images, convert images to PDF, compress, merge and split PDFs, and validate files against upload requirements — all in your browser.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fbfbfd",
+  "theme_color": "#2f3f9e",
+  "icons": [
+    {
+      "src": "/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

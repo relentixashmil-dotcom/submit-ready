@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/logo.svg" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#fbfbfd" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#1a1c22" media="(prefers-color-scheme: dark)" />
+  <title>SubmitReady — Make any document ready to submit</title>
+  <meta
+    name="description"
+    content="SubmitReady is a free, browser-based toolkit to compress images, resize photos and signatures, convert images to PDF, compress, merge and split PDFs, and validate every file against upload requirements."
+  />
+  <link rel="canonical" href="/" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet"
+  />
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "SubmitReady",
+      "applicationCategory": "UtilitiesApplication",
+      "operatingSystem": "Any (browser)",
+      "description": "Browser-based document preparation toolkit: compress and resize images, convert images to PDF, compress, merge and split PDFs, and validate files against upload requirements.",
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+    }
+  </script>
+</head>
+
+
+<body>
+  <script>
+    // Apply the saved colour scheme before paint so there is no flash.
+    (function () {
+      try {
+        var stored = localStorage.getItem("submitready-theme");
+        var dark =
+          stored === "dark" ||
+          (!stored && window.matchMedia("(prefers-color-scheme: dark)").matches);
+        document.documentElement.classList.toggle("dark", dark);
+      } catch (error) {
+        /* ignore */
+      }
+    })();
+  </script>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+
+</html>
