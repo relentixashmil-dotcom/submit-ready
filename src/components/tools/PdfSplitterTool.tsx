@@ -60,6 +60,9 @@ export function PdfSplitterTool() {
   const [rangeInput, setRangeInput] = useState("");
   const [rangeErrors, setRangeErrors] = useState<string[]>([]);
   const [outputs, setOutputs] = useState<SplitOutputState[] | null>(null);
+  /** True once the selection or mode changed after an export, so the previous
+   *  files no longer match what is on screen. */
+  const [stale, setStale] = useState(false);
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -81,6 +84,7 @@ export function PdfSplitterTool() {
       setLoading(true);
       setError(null);
       setOutputs(null);
+      setStale(false);
       setSelected([]);
       setThumbs({});
       setLimit(INITIAL_THUMBNAILS);
@@ -169,13 +173,16 @@ export function PdfSplitterTool() {
     setRangeErrors(parsedRanges.errors);
   }, [parsedRanges]);
 
+  /** Selection edits invalidate any files already exported. */
+  const markStale = () => setStale(true);
+
   const togglePage = (page: number) => {
     setSelected((current) =>
       current.includes(page)
         ? current.filter((entry) => entry !== page)
         : [...current, page].sort((a, b) => a - b),
     );
-    setOutputs(null);
+    markStale();
   };
 
   const runSplit = useCallback(async () => {
@@ -212,6 +219,7 @@ export function PdfSplitterTool() {
       }
 
       const result = await splitPdf(bytes, file.name, groups);
+      setStale(false);
       setOutputs(
         result.outputs.map((output) => ({
           name: output.name,
@@ -351,8 +359,10 @@ export function PdfSplitterTool() {
                 variant={mode === option.value ? "default" : "outline"}
                 aria-pressed={mode === option.value}
                 onClick={() => {
-                  setMode(option.value);
-                  setOutputs(null);
+                  if (option.value !== mode) {
+                    setMode(option.value);
+                    markStale();
+                  }
                 }}
               >
                 {option.label}
@@ -369,7 +379,7 @@ export function PdfSplitterTool() {
                   variant="outline"
                   onClick={() => {
                     setSelected(visiblePages);
-                    setOutputs(null);
+                    markStale();
                   }}
                 >
                   Select all
@@ -380,7 +390,7 @@ export function PdfSplitterTool() {
                   variant="outline"
                   onClick={() => {
                     setSelected([]);
-                    setOutputs(null);
+                    markStale();
                   }}
                 >
                   Clear
@@ -391,7 +401,7 @@ export function PdfSplitterTool() {
                   variant="outline"
                   onClick={() => {
                     setSelected(visiblePages.filter((page) => !selected.includes(page)));
-                    setOutputs(null);
+                    markStale();
                   }}
                 >
                   Invert
@@ -486,7 +496,7 @@ export function PdfSplitterTool() {
                 value={rangeInput}
                 onChange={(event) => {
                   setRangeInput(event.target.value);
-                  setOutputs(null);
+                  markStale();
                 }}
                 placeholder="1-3, 5, 8-10"
                 aria-invalid={rangeErrors.length > 0}
@@ -526,7 +536,7 @@ export function PdfSplitterTool() {
               <Scissors className="size-4" />
               Export pages
             </Button>
-            {outputs ? (
+            {outputs && stale ? (
               <span className="flex items-center gap-1.5 text-xs text-warning-foreground dark:text-warning">
                 <RefreshCw className="size-3.5" />
                 Selection changed — export again to update the files.
@@ -582,6 +592,7 @@ export function PdfSplitterTool() {
                   blob={output.blob}
                   filename={output.name}
                   size={output.size}
+                  disabled={stale}
                 />
               </li>
             ))}
@@ -593,6 +604,7 @@ export function PdfSplitterTool() {
                 blob: output.blob,
               }))}
               zipName="submitready-split-pages.zip"
+              disabled={stale}
             />
           ) : null}
         </ToolStep>

@@ -304,9 +304,13 @@ export function PackProvider({ children }: { children: ReactNode }) {
 
         switch (action.kind) {
           case "compress-image": {
+            // Also honour the pixel caps: a photo that is both too heavy and too
+            // large in pixels should be submission-ready after one click, not two.
             const output = await compressImage(file, {
               targetBytes: action.targetBytes ?? requirement.maxBytes ?? null,
               quality: 0.82,
+              maxWidth: requirement.maxWidth ?? null,
+              maxHeight: requirement.maxHeight ?? null,
             });
             blob = output.blob;
             name = suffixName(file.name, "ready", output.format === "jpeg" ? "jpg" : output.format);
