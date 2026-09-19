@@ -480,16 +480,25 @@ export function ImagesToPdfTool() {
               }
             />
             <div className="flex flex-wrap items-center gap-3">
+              {/* Settings changed after this PDF was built, so the file no longer
+                  matches the controls above: regenerate before downloading. */}
               <DownloadButton
                 blob={result.blob}
                 filename={result.name}
                 label={`Download PDF (${formatBytes(result.size)})`}
                 size={result.size}
+                disabled={stale}
               />
               <span className="flex items-center gap-1.5 font-mono text-xs text-muted-foreground">
                 <Lock className="size-3.5 text-success" />
                 built in your browser
               </span>
+              {stale ? (
+                <span className="flex items-center gap-1.5 text-xs text-warning-foreground dark:text-warning">
+                  <RefreshCw className="size-3.5" />
+                  Regenerate to download this layout.
+                </span>
+              ) : null}
             </div>
           </div>
         )}

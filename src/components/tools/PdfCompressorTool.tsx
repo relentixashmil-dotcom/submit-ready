@@ -405,15 +405,19 @@ export function PdfCompressorTool({
             <div
               className={cn(
                 "flex flex-wrap items-center gap-x-4 gap-y-1 rounded-lg border px-4 py-3",
-                result.metTarget
-                  ? "border-success/40 bg-success/5"
-                  : "border-warning/50 bg-warning/5",
+                stale
+                  ? "border-warning/50 bg-warning/5"
+                  : result.metTarget
+                    ? "border-success/40 bg-success/5"
+                    : "border-warning/50 bg-warning/5",
               )}
             >
               <span className="text-sm font-semibold tracking-tight">
-                {result.metTarget
-                  ? "Ready to upload"
-                  : "Smallest possible size reached"}
+                {stale
+                  ? "Settings changed — compress again"
+                  : result.metTarget
+                    ? "Ready to upload"
+                    : "Smallest possible size reached"}
               </span>
               <span className="font-mono text-xs text-muted-foreground">
                 {formatBytes(result.originalBytes)} → {formatBytes(result.finalBytes)} ·{" "}
@@ -448,6 +452,7 @@ export function PdfCompressorTool({
                 filename={result.name}
                 label={`Download PDF (${formatBytes(result.finalBytes)})`}
                 size={result.finalBytes}
+                disabled={stale}
               />
               <span className="font-mono text-xs text-muted-foreground">
                 {result.lossless

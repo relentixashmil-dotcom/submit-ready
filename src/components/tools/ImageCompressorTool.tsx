@@ -224,13 +224,21 @@ export function ImageCompressorTool({
 
   /* --------------------------------- derived ------------------------------- */
 
-  const done = items.filter((item) => item.status === "done" && item.output);
+  // Results are only offered when they match the settings currently on screen;
+  // a config change puts the rows back to "working" until the new pass lands.
+  const done = items.filter(
+    (item) => item.status === "done" && item.output && item.configKey === configKey,
+  );
   const totalBefore = done.reduce((sum, item) => sum + item.file.size, 0);
   const totalAfter = done.reduce(
     (sum, item) => sum + (item.output?.blob.size ?? 0),
     0,
   );
   const active = items.find((item) => item.id === activeId) ?? items[0] ?? null;
+  const activeOutput =
+    active && active.status === "done" && active.configKey === configKey
+      ? active.output
+      : null;
   const anyUnmet = done.some((item) => !item.output?.metTarget);
 
   const listItems: FileListItem[] = items.map((item) => {
@@ -311,11 +319,15 @@ export function ImageCompressorTool({
             renderActions={(item) => {
               const source = items.find((entry) => entry.id === item.id);
               if (!source?.output) return null;
+              // Never hand back bytes produced by the previous settings: the row
+              // goes back to "working" the moment a setting changes.
+              const stale = source.status !== "done" || source.configKey !== configKey;
               return (
                 <DownloadButton
                   variant="outline"
                   buttonSize="sm"
                   label=""
+                  disabled={stale}
                   ariaLabel={`Download compressed ${source.file.name}`}
                   blob={source.output.blob}
                   filename={suffixName(
@@ -459,7 +471,7 @@ export function ImageCompressorTool({
           </p>
         ) : null}
 
-        {active?.status === "done" && active.output ? (
+        {active && activeOutput ? (
           <BeforeAfterComparison
             before={{
               label: "Original",
@@ -473,14 +485,14 @@ export function ImageCompressorTool({
             after={{
               label: "Compressed",
               url: active.afterUrl,
-              bytes: active.output.blob.size,
-              width: active.output.width,
-              height: active.output.height,
-              format: FORMAT_LABEL[active.output.format],
+              bytes: activeOutput.blob.size,
+              width: activeOutput.width,
+              height: activeOutput.height,
+              format: FORMAT_LABEL[activeOutput.format],
             }}
-            targetBytes={active.output.targetBytes}
-            metTarget={active.output.metTarget}
-            notes={active.output.notes}
+            targetBytes={activeOutput.targetBytes}
+            metTarget={activeOutput.metTarget}
+            notes={activeOutput.notes}
           />
         ) : null}
 
@@ -516,17 +528,17 @@ export function ImageCompressorTool({
             ) : null}
 
             <div className="flex flex-wrap gap-2">
-              {active?.output ? (
+              {active && activeOutput ? (
                 <DownloadButton
                   bytes={null}
-                  blob={active.output.blob}
+                  blob={activeOutput.blob}
                   filename={suffixName(
                     active.file.name,
                     target ? formatBytes(target).replace(/\s/g, "") : "compressed",
-                    active.output.format === "jpeg" ? "jpg" : active.output.format,
+                    activeOutput.format === "jpeg" ? "jpg" : activeOutput.format,
                   )}
                   label="Download this file"
-                  size={active.output.blob.size}
+                  size={activeOutput.blob.size}
                 />
               ) : null}
               {zipFiles.length > 0 ? (

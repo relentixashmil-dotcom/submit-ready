@@ -288,11 +288,14 @@ export function PdfMergerTool() {
                 {formatBytes(result.size)} · {result.name}
               </span>
             </div>
+            {/* The list or order changed after this merge, so the bytes no longer
+                match what the page shows: merge again first. */}
             <DownloadButton
               blob={result.blob}
               filename={result.name}
               label={`Download merged PDF (${formatBytes(result.size)})`}
               size={result.size}
+              disabled={stale}
             />
           </div>
         )}

@@ -261,6 +261,16 @@ export function ImageResizerTool() {
     : null;
   const upscaling = plan ? plan.scale > 1.01 : false;
 
+  // Only results produced by the settings currently on screen may be offered
+  // for download; anything older is stale the moment a control changes.
+  const freshItems = items.filter(
+    (item) => item.status === "done" && item.output && item.configKey === configKey,
+  );
+  const activeOutput =
+    active && active.status === "done" && active.configKey === configKey
+      ? active.output
+      : null;
+
   const listItems: FileListItem[] = items.map((item) => ({
     id: item.id,
     name: item.file.name,
@@ -319,11 +329,15 @@ export function ImageResizerTool() {
             renderActions={(item) => {
               const source = items.find((entry) => entry.id === item.id);
               if (!source?.output) return null;
+              // A size change re-runs the resize; until it lands the old bytes
+              // no longer match the settings shown above, so they stay locked.
+              const stale = source.status !== "done" || source.configKey !== configKey;
               return (
                 <DownloadButton
                   variant="outline"
                   buttonSize="sm"
                   label=""
+                  disabled={stale}
                   ariaLabel={`Download resized ${source.file.name}`}
                   blob={source.output.blob}
                   filename={suffixName(
@@ -616,7 +630,7 @@ export function ImageResizerTool() {
           </p>
         ) : null}
 
-        {active?.status === "done" && active.output ? (
+        {active && activeOutput ? (
           <BeforeAfterComparison
             before={{
               label: "Original",
@@ -629,53 +643,51 @@ export function ImageResizerTool() {
             after={{
               label: "Resized",
               url: active.afterUrl,
-              bytes: active.output.blob.size,
-              width: active.output.width,
-              height: active.output.height,
-              format: FORMAT_LABEL[active.output.format],
+              bytes: activeOutput.blob.size,
+              width: activeOutput.width,
+              height: activeOutput.height,
+              format: FORMAT_LABEL[activeOutput.format],
             }}
           />
         ) : null}
 
-        {items.some((item) => item.output) ? (
+        {freshItems.length > 0 ? (
           <div className="flex flex-wrap gap-2">
-            {active?.output ? (
+            {active && activeOutput ? (
               <DownloadButton
-                blob={active.output.blob}
+                blob={activeOutput.blob}
                 filename={suffixName(
                   active.file.name,
-                  `${active.output.width}x${active.output.height}`,
-                  active.output.format === "jpeg" ? "jpg" : active.output.format,
+                  `${activeOutput.width}x${activeOutput.height}`,
+                  activeOutput.format === "jpeg" ? "jpg" : activeOutput.format,
                 )}
                 label="Download this file"
-                size={active.output.blob.size}
+                size={activeOutput.blob.size}
               />
             ) : null}
-            {items.filter((item) => item.output).length > 1 ? (
+            {freshItems.length > 1 ? (
               <DownloadAllButton
-                files={items
-                  .filter((item) => item.output)
-                  .map((item) => ({
-                    name: suffixName(
-                      item.file.name,
-                      `${item.output!.width}x${item.output!.height}`,
-                      item.output!.format === "jpeg" ? "jpg" : item.output!.format,
-                    ),
-                    blob: item.output!.blob,
-                  }))}
+                files={freshItems.map((item) => ({
+                  name: suffixName(
+                    item.file.name,
+                    `${item.output!.width}x${item.output!.height}`,
+                    item.output!.format === "jpeg" ? "jpg" : item.output!.format,
+                  ),
+                  blob: item.output!.blob,
+                }))}
                 zipName="submitready-resized-images.zip"
               />
             ) : null}
             <span
               className={cn(
                 "flex items-center gap-2 rounded-lg border px-3 py-2 font-mono text-xs",
-                active?.output
+                activeOutput
                   ? "border-success/40 bg-success/5 text-muted-foreground"
                   : "border-border text-muted-foreground",
               )}
             >
-              {active?.output
-                ? `${formatBytes(active.file.size)} → ${formatBytes(active.output.blob.size)}`
+              {active && activeOutput
+                ? `${formatBytes(active.file.size)} → ${formatBytes(activeOutput.blob.size)}`
                 : "processing…"}
             </span>
           </div>
