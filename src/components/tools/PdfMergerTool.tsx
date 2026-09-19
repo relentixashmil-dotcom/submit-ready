@@ -7,6 +7,8 @@ import { FileDropzone } from "@/components/tool/FileDropzone";
 import { FileList, type FileListItem } from "@/components/tool/FileList";
 import { ProgressIndicator } from "@/components/tool/ProgressIndicator";
 import { DownloadButton } from "@/components/tool/DownloadButton";
+import { EmptyState, ErrorState } from "@/components/tool/StateMessage";
+import { ResultStatus } from "@/components/tool/ResultStatus";
 import { ToolStep } from "@/components/tool/ToolStep";
 import { mergePdfs, readPdfInfo } from "@/lib/pdf";
 import {
@@ -258,12 +260,7 @@ export function PdfMergerTool() {
         {busy ? <ProgressIndicator value={null} label="Copying pages into one PDF" /> : null}
 
         {error ? (
-          <p
-            className="rounded-lg border border-destructive/40 bg-destructive/5 px-3 py-2 text-sm text-destructive"
-            role="alert"
-          >
-            {error}
-          </p>
+          <ErrorState title="Merge failed" message={error} />
         ) : null}
       </ToolStep>
 
@@ -274,22 +271,31 @@ export function PdfMergerTool() {
         state={result ? "active" : "todo"}
       >
         {!result ? (
-          <p className="flex items-center gap-2 text-sm text-muted-foreground">
-            <FileText className="size-4" />
-            The merged file appears here with its page count.
-          </p>
+          <EmptyState
+            icon={<FileText className="size-5" />}
+            title="The merged file appears here"
+            description="Add two or more PDFs, set the order, and the combined document will be shown with its total page count and size."
+          />
         ) : (
           <div className="flex flex-col gap-4">
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-lg border border-success/40 bg-success/5 px-4 py-3">
-              <span className="text-sm font-semibold tracking-tight">
-                {result.fileCount} files merged into {result.pageCount} pages
-              </span>
-              <span className="font-mono text-xs text-muted-foreground">
-                {formatBytes(result.size)} · {result.name}
-              </span>
-            </div>
-            {/* The list or order changed after this merge, so the bytes no longer
-                match what the page shows: merge again first. */}
+            {stale ? (
+              <ErrorState
+                title="The file list changed since this merge"
+                message="Merge again to produce a file that matches the order shown above."
+              />
+            ) : (
+              <ResultStatus
+                originalBytes={totalBytes}
+                resultBytes={result.size}
+                resultLabel="Merged PDF"
+                resultDetail={`${result.pageCount} pages`}
+                action="Merging"
+              />
+            )}
+            <p className="text-xs text-muted-foreground">
+              {result.fileCount} files combined into one document, in the order shown
+              above. Page sizes and quality are preserved exactly.
+            </p>
             <DownloadButton
               blob={result.blob}
               filename={result.name}

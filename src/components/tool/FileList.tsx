@@ -116,7 +116,7 @@ export function FileList({
                 aria-pressed={selected}
                 onClick={() => onToggleSelect(item.id)}
                 className={cn(
-                  "flex size-6 shrink-0 items-center justify-center rounded-md border text-xs font-semibold transition-colors",
+                  "flex size-7 shrink-0 items-center justify-center rounded-md border text-xs font-semibold outline-none transition-colors focus-visible:ring-[3px] focus-visible:ring-ring/50 sm:size-6",
                   selected
                     ? "border-primary bg-primary text-primary-foreground"
                     : "border-border text-muted-foreground hover:border-primary/60",
@@ -162,7 +162,8 @@ export function FileList({
                   <Button
                     type="button"
                     variant="ghost"
-                    size="icon-sm"
+                    size="icon"
+                    className="size-9 sm:size-8"
                     aria-label={`Move ${item.name} up`}
                     disabled={index === 0}
                     onClick={() => onMove?.(item.id, -1)}
@@ -172,7 +173,8 @@ export function FileList({
                   <Button
                     type="button"
                     variant="ghost"
-                    size="icon-sm"
+                    size="icon"
+                    className="size-9 sm:size-8"
                     aria-label={`Move ${item.name} down`}
                     disabled={index === items.length - 1}
                     onClick={() => onMove?.(item.id, 1)}
@@ -191,9 +193,9 @@ export function FileList({
                 <Button
                   type="button"
                   variant="ghost"
-                  size="icon-sm"
+                  size="icon"
                   aria-label={`Remove ${item.name}`}
-                  className="text-muted-foreground hover:text-destructive"
+                  className="size-9 text-muted-foreground hover:text-destructive sm:size-8"
                   onClick={() => onRemove(item.id)}
                 >
                   <Trash2 className="size-4" />

@@ -10,13 +10,13 @@ import { useSeo } from "@/hooks/use-seo";
 import { POPULAR_REQUIREMENTS, QUICK_ACTIONS, TOOLS, type ToolKind } from "@/lib/seo";
 
 const ORDER: ToolKind[] = [
+  "application-pack",
   "image-compress",
   "image-resize",
   "images-to-pdf",
   "pdf-compress",
   "pdf-merge",
   "pdf-split",
-  "application-pack",
 ];
 
 export default function ToolsIndex() {
@@ -31,7 +31,7 @@ export default function ToolsIndex() {
     <div className="flex min-h-screen flex-col">
       <SiteHeader />
 
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-10 sm:px-6">
+      <main id="main-content" className="mx-auto w-full max-w-6xl flex-1 px-4 py-10 sm:px-6">
         <header className="flex flex-col gap-4">
           <Badge variant="secondary" className="w-fit gap-1.5">
             <Wand2 className="size-3" />
@@ -114,7 +114,7 @@ export default function ToolsIndex() {
               </span>
               <Link
                 to={item.to}
-                className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-primary underline-offset-4 hover:underline"
+                className="mt-1 inline-flex items-center gap-1 rounded text-xs font-medium text-primary underline-offset-4 outline-none hover:underline focus-visible:ring-[3px] focus-visible:ring-ring/50"
               >
                 {item.cta}
                 <ArrowRight className="size-3.5" />
@@ -134,7 +134,7 @@ export default function ToolsIndex() {
               <Link
                 key={item.path + item.label}
                 to={item.path}
-                className="group flex items-center justify-between gap-3 rounded-xl border bg-card px-4 py-3 transition-colors hover:border-primary/50"
+                className="group flex items-center justify-between gap-3 rounded-xl border bg-card px-4 py-3 outline-none transition-colors hover:border-primary/50 focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-ring/50"
               >
                 <span className="flex flex-col">
                   <span className="font-mono text-sm font-semibold tracking-tight">

@@ -7,6 +7,7 @@ import { VlyToolbar } from "../vly-toolbar-readonly.tsx";
 import { ConvexAuthProvider } from "@convex-dev/auth/react";
 import { ConvexReactClient } from "convex/react";
 import React, { StrictMode, useEffect, lazy, Suspense } from "react";
+import { MotionConfig } from "framer-motion";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Route, Routes, useLocation } from "react-router";
 import "./index.css";
@@ -122,6 +123,8 @@ function RouteSyncer() {
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <RootErrorBoundary>
+      {/* Honour prefers-reduced-motion: decorative motion switches off globally. */}
+      <MotionConfig reducedMotion="user">
       <ToolbarErrorBoundary>
         <VlyToolbar />
       </ToolbarErrorBoundary>
@@ -165,6 +168,7 @@ createRoot(document.getElementById("root")!).render(
         </PackProvider>
         <Toaster />
       </ConvexAuthProvider>
+      </MotionConfig>
     </RootErrorBoundary>
   </StrictMode>,
 );

@@ -22,6 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FileDropzone } from "@/components/tool/FileDropzone";
 import { ProgressIndicator } from "@/components/tool/ProgressIndicator";
+import { EmptyState, ErrorState } from "@/components/tool/StateMessage";
 import { RequirementValidator } from "@/components/tool/RequirementValidator";
 import { DownloadAllButton, DownloadButton } from "@/components/tool/DownloadButton";
 import { ToolStep } from "@/components/tool/ToolStep";
@@ -408,14 +409,7 @@ function PackItemCard({ item }: { item: PackItem }) {
         <ProgressIndicator value={null} label={item.runningAction} />
       ) : null}
 
-      {item.error ? (
-        <p
-          className="rounded-lg border border-destructive/40 bg-destructive/5 px-3 py-2 text-sm text-destructive"
-          role="alert"
-        >
-          {item.error}
-        </p>
-      ) : null}
+      {item.error ? <ErrorState title="This file failed" message={item.error} /> : null}
 
       <div className="rounded-lg border bg-muted/20 p-3">
         <RequirementValidator
@@ -658,10 +652,11 @@ export function ApplicationPackChecklist() {
         }
       >
         {items.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            Nothing added yet. The checklist appears here once you add a document — the
-            pack is kept in this browser tab only.
-          </p>
+          <EmptyState
+            icon={<ClipboardCheck className="size-5" />}
+            title="The checklist appears here"
+            description="Add a document above and each upload rule is checked and marked met, worth checking, or not met — with the numbers behind the verdict."
+          />
         ) : (
           <div className="flex flex-col gap-3">
             {items.map((item) => (
@@ -678,10 +673,11 @@ export function ApplicationPackChecklist() {
         state={allReady ? "active" : "todo"}
       >
         {items.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            The final checklist appears here: a clear “everything is submission-ready”
-            confirmation plus all your files in one download.
-          </p>
+          <EmptyState
+            icon={<CheckCircle2 className="size-5" />}
+            title="Finish here once every document passes"
+            description="You'll get a clear “everything is submission-ready” confirmation and all your prepared files in one download."
+          />
         ) : (
           <div className="flex flex-col gap-4">
             <div

@@ -1,6 +1,7 @@
-import { ArrowRight, TrendingDown } from "lucide-react";
+import { ArrowRight, ImageIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { formatBytes, reductionPercent } from "@/lib/format";
+import { formatBytes } from "@/lib/format";
+import { ResultStatus } from "./ResultStatus";
 
 export interface ComparisonSide {
   label: string;
@@ -18,6 +19,9 @@ export interface BeforeAfterComparisonProps {
   after: ComparisonSide;
   targetBytes?: number | null;
   metTarget?: boolean;
+  /** Verb for the screen-reader summary, e.g. "Compression". */
+  action?: string;
+  resultLabel?: string;
   notes?: string[];
   className?: string;
 }
@@ -55,15 +59,15 @@ function StatRow({ side }: { side: ComparisonSide }) {
 
 function PreviewPanel({ side }: { side: ComparisonSide }) {
   return (
-    <div className="flex flex-1 flex-col gap-3 rounded-lg border bg-card p-3">
-      <div className="flex items-center justify-between gap-2">
+    <figure className="flex flex-1 flex-col gap-3 rounded-lg border bg-card p-3">
+      <figcaption className="flex items-center justify-between gap-2">
         <span className="text-xs font-semibold tracking-tight uppercase">
           {side.label}
         </span>
         {side.muted ? (
           <span className="text-[11px] text-muted-foreground">original</span>
         ) : null}
-      </div>
+      </figcaption>
       <div className="checkerboard flex h-40 items-center justify-center overflow-hidden rounded-md border">
         {side.url ? (
           <img
@@ -72,13 +76,14 @@ function PreviewPanel({ side }: { side: ComparisonSide }) {
             className="max-h-full max-w-full object-contain"
           />
         ) : (
-          <span className="px-3 text-center text-xs text-muted-foreground">
-            No visual preview
+          <span className="flex flex-col items-center gap-1.5 px-3 text-center text-xs text-muted-foreground">
+            <ImageIcon className="size-5 opacity-60" aria-hidden="true" />
+            No visual preview for this file type
           </span>
         )}
       </div>
       <StatRow side={side} />
-    </div>
+    </figure>
   );
 }
 
@@ -87,46 +92,29 @@ export function BeforeAfterComparison({
   after,
   targetBytes = null,
   metTarget,
+  action = "Processing",
+  resultLabel,
   notes = [],
   className,
 }: BeforeAfterComparisonProps) {
-  const reduction = reductionPercent(before.bytes, after.bytes);
-  const grew = after.bytes > before.bytes;
-
   return (
-    <div className={cn("flex flex-col gap-3", className)}>
-      <div className="flex flex-wrap items-center gap-2">
-        <TrendingDown className="size-4 text-success" />
-        <span className="text-sm font-semibold tracking-tight">
-          {grew
-            ? "Output is larger than the original"
-            : reduction > 0
-              ? `${reduction}% smaller`
-              : "Same size"}
-        </span>
-        <span className="font-mono text-xs text-muted-foreground">
-          {formatBytes(before.bytes)} → {formatBytes(after.bytes)}
-        </span>
-        {targetBytes ? (
-          <span
-            className={cn(
-              "rounded-full border px-2 py-0.5 text-xs font-medium",
-              metTarget === false
-                ? "border-warning/50 bg-warning/10 text-warning-foreground dark:text-warning"
-                : "border-success/40 bg-success/10 text-success",
-            )}
-          >
-            {metTarget === false
-              ? `Couldn't reach ${formatBytes(targetBytes)}`
-              : `Within ${formatBytes(targetBytes)}`}
-          </span>
-        ) : null}
-      </div>
+    <div className={cn("flex flex-col gap-4", className)}>
+      <ResultStatus
+        originalBytes={before.bytes}
+        resultBytes={after.bytes}
+        resultLabel={resultLabel ?? after.label}
+        resultDetail={
+          after.width && after.height ? `${after.width} × ${after.height} px` : undefined
+        }
+        targetBytes={targetBytes}
+        metTarget={metTarget ?? null}
+        action={action}
+      />
 
       <div className="flex flex-col gap-3 sm:flex-row">
         <PreviewPanel side={before} />
         <div className="hidden items-center justify-center sm:flex">
-          <ArrowRight className="size-4 text-muted-foreground" />
+          <ArrowRight className="size-4 text-muted-foreground" aria-hidden="true" />
         </div>
         <PreviewPanel side={after} />
       </div>
@@ -134,7 +122,10 @@ export function BeforeAfterComparison({
       {notes.length > 0 ? (
         <ul className="flex flex-col gap-1.5">
           {notes.map((note) => (
-            <li key={note} className="text-xs leading-relaxed text-muted-foreground">
+            <li
+              key={note}
+              className="text-xs leading-relaxed text-muted-foreground"
+            >
               {note}
             </li>
           ))}

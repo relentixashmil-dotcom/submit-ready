@@ -41,7 +41,7 @@ export function ToolCard({
       <Link
         to={to}
         className={cn(
-          "group flex h-full flex-col gap-3 rounded-xl border bg-card p-4 transition-colors hover:border-primary/50 sm:p-5",
+          "group flex h-full flex-col gap-3 rounded-xl border bg-card p-4 outline-none transition-colors hover:border-primary/50 focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-ring/50 sm:p-5",
           className,
         )}
       >

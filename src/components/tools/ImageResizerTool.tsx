@@ -18,6 +18,7 @@ import { FileDropzone } from "@/components/tool/FileDropzone";
 import { FileList, type FileListItem } from "@/components/tool/FileList";
 import { ProgressIndicator } from "@/components/tool/ProgressIndicator";
 import { BeforeAfterComparison } from "@/components/tool/BeforeAfterComparison";
+import { EmptyState, ErrorState } from "@/components/tool/StateMessage";
 import { DownloadAllButton, DownloadButton } from "@/components/tool/DownloadButton";
 import { ToolStep } from "@/components/tool/ToolStep";
 import {
@@ -616,18 +617,15 @@ export function ImageResizerTool() {
         ) : null}
 
         {items.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            Add an image to see the preview and download options.
-          </p>
+          <EmptyState
+            icon={<Maximize2 className="size-5" />}
+            title="Your resized image appears here"
+            description="Add an image above, choose the dimensions the form wants, and the original and resized versions will be shown side by side."
+          />
         ) : null}
 
         {active?.error ? (
-          <p
-            className="rounded-lg border border-destructive/40 bg-destructive/5 px-3 py-2 text-sm text-destructive"
-            role="alert"
-          >
-            {active.error}
-          </p>
+          <ErrorState title="This image failed" message={active.error} />
         ) : null}
 
         {active && activeOutput ? (
@@ -648,6 +646,7 @@ export function ImageResizerTool() {
               height: activeOutput.height,
               format: FORMAT_LABEL[activeOutput.format],
             }}
+            action="Resizing"
           />
         ) : null}
 

@@ -26,12 +26,17 @@ export function ProgressIndicator({
       )}
       role="status"
       aria-live="polite"
+      aria-atomic="true"
+      aria-busy="true"
     >
       <div className="flex items-center gap-2 text-sm font-medium">
-        <Loader2 className="size-4 shrink-0 animate-spin text-primary" />
+        <Loader2
+          className="size-4 shrink-0 animate-spin text-primary motion-reduce:animate-none"
+          aria-hidden="true"
+        />
         <span className="tracking-tight">{label}</span>
         {determinate ? (
-          <span className="ml-auto font-mono text-xs text-muted-foreground">
+          <span className="ml-auto font-mono text-xs text-muted-foreground tabular-nums">
             {Math.round(value)}%
           </span>
         ) : null}

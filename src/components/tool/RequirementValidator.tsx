@@ -64,8 +64,12 @@ export function RequirementValidator({
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-sm font-semibold tracking-tight">{title}</span>
         {loading ? (
-          <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Loader2 className="size-3.5 animate-spin" />
+          <span
+            className="flex items-center gap-1.5 text-xs text-muted-foreground"
+            role="status"
+            aria-live="polite"
+          >
+            <Loader2 className="size-3.5 animate-spin motion-reduce:animate-none" />
             Checking…
           </span>
         ) : checks.length > 0 ? (
@@ -74,6 +78,8 @@ export function RequirementValidator({
               "rounded-full border px-2 py-0.5 text-xs font-medium",
               styles.chip,
             )}
+            role="status"
+            aria-live="polite"
           >
             {styles.icon}
             <span className="ml-1 align-middle">{styles.label}</span>

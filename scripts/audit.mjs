@@ -344,22 +344,32 @@ async function uploadFiles(page, files, index = 0) {
 
 /** File input inside the slot whose label matches, for the Application Pack. */
 async function uploadToSlot(page, label, files) {
-  const handle = await page.evaluateHandle((lbl) => {
-    const candidates = Array.from(
-      document.querySelectorAll("h2,h3,h4,span,div,p,label,button"),
-    );
-    const node = candidates.find((candidate) =>
-      (candidate.textContent ?? "").trim().toLowerCase().startsWith(lbl),
-    );
-    let element = node;
-    for (let depth = 0; depth < 9 && element; depth += 1) {
-      const input = element.querySelector?.('input[type="file"]');
-      if (input) return input;
-      element = element.parentElement;
-    }
-    return null;
-  }, label.toLowerCase());
-  const element = handle.asElement();
+  const lookup = async () => {
+    const handle = await page.evaluateHandle((lbl) => {
+      const candidates = Array.from(
+        document.querySelectorAll("h2,h3,h4,span,div,p,label,button"),
+      );
+      const node = candidates.find((candidate) =>
+        (candidate.textContent ?? "").trim().toLowerCase().startsWith(lbl),
+      );
+      let element = node;
+      for (let depth = 0; depth < 9 && element; depth += 1) {
+        const input = element.querySelector?.('input[type="file"]');
+        if (input) return input;
+        element = element.parentElement;
+      }
+      return null;
+    }, label.toLowerCase());
+    return handle.asElement();
+  };
+  // The tool itself is a lazy chunk, so the slot grid can mount a moment after
+  // the page shell: poll for it rather than racing the Suspense boundary.
+  const deadline = Date.now() + 30000;
+  let element = await lookup();
+  while (!element && Date.now() < deadline) {
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    element = await lookup();
+  }
   if (!element) throw new Error(`no file input near "${label}"`);
   await element.uploadFile(...files);
 }
@@ -612,6 +622,9 @@ async function main() {
     const compressText = await bodyText(page);
     const reportedKb = /→ (\d+(?:\.\d+)?) KB/.exec(compressText);
     assert("a reduction percentage is shown", /% smaller/.test(compressText));
+    assert("the target size is the primary control", /Make it under/.test(compressText));
+    assert("the result separates processing from the requirement", /Processed successfully/.test(compressText));
+    assert("the requirement is stated in the user's terms", /Under 50 KB/.test(compressText));
     await waitForEnabledAria(page, "Download compressed", 60000);
     const perFile = await page.$('button[aria-label^="Download compressed"]');
     assert("per-file download button exists", Boolean(perFile));
@@ -1164,6 +1177,8 @@ async function main() {
 
     // The phone file picker is the main way documents arrive on mobile.
     await go("/image-compressor");
+    // The tool is a lazy chunk: wait for the dropzone input to mount.
+    await page.waitForSelector('input[type="file"]', { timeout: 45000 }).catch(() => null);
     const picker = await page.$eval('input[type="file"]', (node) => ({
       accept: node.getAttribute("accept") ?? "",
       multiple: node.multiple,

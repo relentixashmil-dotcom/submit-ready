@@ -10,6 +10,7 @@ import { FileList, type FileListItem } from "@/components/tool/FileList";
 import { ProgressIndicator } from "@/components/tool/ProgressIndicator";
 import { SizeTargetSelector } from "@/components/tool/SizeTargetSelector";
 import { BeforeAfterComparison } from "@/components/tool/BeforeAfterComparison";
+import { EmptyState, ErrorState } from "@/components/tool/StateMessage";
 import { DownloadAllButton, DownloadButton } from "@/components/tool/DownloadButton";
 import { ToolStep } from "@/components/tool/ToolStep";
 import {
@@ -268,8 +269,15 @@ export function ImageCompressorTool({
               : "default",
       badge:
         output && item.status === "done" ? (
-          <Badge variant={output.metTarget ? "secondary" : "outline"}>
-            {reductionPercent(item.file.size, output.blob.size)}% smaller
+          <Badge
+            variant={output.metTarget ? "secondary" : "outline"}
+            className={cn("gap-1", output.metTarget && "text-success")}
+          >
+            {target === null
+              ? `${reductionPercent(item.file.size, output.blob.size)}% smaller`
+              : output.metTarget
+                ? `Under ${formatBytes(target)}`
+                : formatBytes(output.blob.size)}
           </Badge>
         ) : null,
     };
@@ -456,19 +464,15 @@ export function ImageCompressorTool({
         ) : null}
 
         {items.length === 0 ? (
-          <p className="flex items-start gap-2 text-sm text-muted-foreground">
-            <Info className="mt-0.5 size-4 shrink-0" />
-            Add at least one image to see the before and after comparison here.
-          </p>
+          <EmptyState
+            icon={<Info className="size-5" />}
+            title="Your before-and-after appears here"
+            description="Add at least one image above and the original, the compressed result and the size check will be shown side by side."
+          />
         ) : null}
 
         {active?.error ? (
-          <p
-            className="rounded-lg border border-destructive/40 bg-destructive/5 px-3 py-2 text-sm text-destructive"
-            role="alert"
-          >
-            {active.error}
-          </p>
+          <ErrorState title="This image failed" message={active.error} />
         ) : null}
 
         {active && activeOutput ? (
@@ -508,10 +512,14 @@ export function ImageCompressorTool({
             >
               <span className="text-sm font-semibold tracking-tight">
                 {anyUnmet
-                  ? "Some files couldn't reach the target"
-                  : done.length === 1
-                    ? "File is ready to submit"
-                    : `${done.length} files are ready to submit`}
+                  ? "Processed — but some files couldn't reach the target"
+                  : target === null
+                    ? done.length === 1
+                      ? "Compression complete"
+                      : `${done.length} files compressed`
+                    : done.length === 1
+                      ? "Requirement satisfied — ready to submit"
+                      : `All ${done.length} files meet the requirement`}
               </span>
               <span className="font-mono text-xs text-muted-foreground">
                 {formatBytes(totalBefore)} → {formatBytes(totalAfter)} ·{" "}

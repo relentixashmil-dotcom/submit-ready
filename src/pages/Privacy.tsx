@@ -87,7 +87,7 @@ export default function Privacy() {
     <div className="flex min-h-screen flex-col">
       <SiteHeader />
 
-      <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-10 sm:px-6">
+      <main id="main-content" className="mx-auto w-full max-w-3xl flex-1 px-4 py-10 sm:px-6">
         <header className="flex flex-col gap-4">
           <Badge variant="secondary" className="w-fit gap-1.5">
             <ShieldCheck className="size-3" />

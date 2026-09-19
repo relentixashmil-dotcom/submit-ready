@@ -16,6 +16,7 @@ import { FileList } from "@/components/tool/FileList";
 import { ProgressIndicator } from "@/components/tool/ProgressIndicator";
 import { SizeTargetSelector } from "@/components/tool/SizeTargetSelector";
 import { BeforeAfterComparison } from "@/components/tool/BeforeAfterComparison";
+import { EmptyState, ErrorState } from "@/components/tool/StateMessage";
 import { DownloadButton } from "@/components/tool/DownloadButton";
 import { ToolStep } from "@/components/tool/ToolStep";
 import {
@@ -264,12 +265,7 @@ export function PdfCompressorTool({
           </p>
         ) : null}
         {error && !source ? (
-          <p
-            className="rounded-lg border border-destructive/40 bg-destructive/5 px-3 py-2 text-sm text-destructive"
-            role="alert"
-          >
-            {error}
-          </p>
+          <ErrorState title="Could not open that PDF" message={error} />
         ) : null}
       </ToolStep>
 
@@ -325,8 +321,9 @@ export function PdfCompressorTool({
           presets={PDF_SIZE_PRESETS}
           allowNone
           noneLabel="No target"
-          label="Target size (optional)"
+          label="Make it under (optional)"
           hint="Pages share a per-page byte budget, so a whole document lands near the target."
+          activeHint="Page content is re-encoded against this budget, then the real size is measured."
         />
 
         <p className="flex items-start gap-2 rounded-lg border bg-muted/30 px-3 py-2 text-xs leading-relaxed text-muted-foreground">
@@ -381,12 +378,7 @@ export function PdfCompressorTool({
         ) : null}
 
         {error && source ? (
-          <p
-            className="rounded-lg border border-destructive/40 bg-destructive/5 px-3 py-2 text-sm text-destructive"
-            role="alert"
-          >
-            {error}
-          </p>
+          <ErrorState title="Compression failed" message={error} />
         ) : null}
       </ToolStep>
 
@@ -397,9 +389,11 @@ export function PdfCompressorTool({
         state={result ? "active" : "todo"}
       >
         {!result ? (
-          <p className="text-sm text-muted-foreground">
-            Compress the PDF to see the size comparison and a page preview.
-          </p>
+          <EmptyState
+            icon={<FileText className="size-5" />}
+            title="Your compressed PDF appears here"
+            description="Pick a level and compress, and you'll see the original page next to the result, along with the exact before and after sizes."
+          />
         ) : (
           <div className="flex flex-col gap-4">
             <div
@@ -415,9 +409,11 @@ export function PdfCompressorTool({
               <span className="text-sm font-semibold tracking-tight">
                 {stale
                   ? "Settings changed — compress again"
-                  : result.metTarget
-                    ? "Ready to upload"
-                    : "Smallest possible size reached"}
+                  : result.targetBytes === null
+                    ? "Compression complete"
+                    : result.metTarget
+                      ? "Requirement satisfied — ready to upload"
+                      : "Processed — target not met"}
               </span>
               <span className="font-mono text-xs text-muted-foreground">
                 {formatBytes(result.originalBytes)} → {formatBytes(result.finalBytes)} ·{" "}

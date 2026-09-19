@@ -16,6 +16,8 @@ import { FileDropzone } from "@/components/tool/FileDropzone";
 import { FileList } from "@/components/tool/FileList";
 import { ProgressIndicator } from "@/components/tool/ProgressIndicator";
 import { DownloadAllButton, DownloadButton } from "@/components/tool/DownloadButton";
+import { ErrorState } from "@/components/tool/StateMessage";
+import { ResultStatus } from "@/components/tool/ResultStatus";
 import { ToolStep } from "@/components/tool/ToolStep";
 import { parsePageRanges, readPdfInfo, selectionToGroup, splitPdf } from "@/lib/pdf";
 import {
@@ -323,12 +325,7 @@ export function PdfSplitterTool() {
           </p>
         ) : null}
         {error && !file ? (
-          <p
-            className="rounded-lg border border-destructive/40 bg-destructive/5 px-3 py-2 text-sm text-destructive"
-            role="alert"
-          >
-            {error}
-          </p>
+          <ErrorState title="Could not open that PDF" message={error} />
         ) : null}
       </ToolStep>
 
@@ -432,7 +429,7 @@ export function PdfSplitterTool() {
                       aria-pressed={selectingPages ? isSelected : undefined}
                       onClick={() => (selectingPages ? togglePage(page) : undefined)}
                       className={cn(
-                        "flex flex-col gap-2 rounded-lg border p-2 text-left transition-colors",
+                        "flex flex-col gap-2 rounded-lg border p-2 text-left outline-none transition-colors focus-visible:ring-[3px] focus-visible:ring-ring/50",
                         isSelected
                           ? "border-primary bg-primary/5"
                           : "border-border hover:border-primary/50",
@@ -547,12 +544,7 @@ export function PdfSplitterTool() {
           {busy ? <ProgressIndicator value={null} label="Copying pages" /> : null}
 
           {error && file ? (
-            <p
-              className="rounded-lg border border-destructive/40 bg-destructive/5 px-3 py-2 text-sm text-destructive"
-              role="alert"
-            >
-              {error}
-            </p>
+            <ErrorState title="Export failed" message={error} />
           ) : null}
         </ToolStep>
       ) : null}
@@ -569,6 +561,13 @@ export function PdfSplitterTool() {
             </Badge>
           }
         >
+          <ResultStatus
+            originalBytes={file?.size ?? 0}
+            resultBytes={outputs.reduce((sum, output) => sum + output.size, 0)}
+            resultLabel={outputs.length === 1 ? "Exported PDF" : `${outputs.length} PDFs`}
+            resultDetail={`${outputs.reduce((sum, output) => sum + output.pageCount, 0)} pages exported`}
+            action="Splitting"
+          />
           <ul className="flex flex-col gap-2">
             {outputs.map((output) => (
               <li

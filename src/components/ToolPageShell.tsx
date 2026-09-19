@@ -58,7 +58,7 @@ export function ToolPageShell({
     <div className="flex min-h-screen flex-col">
       <SiteHeader />
 
-      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8 sm:px-6 sm:py-10">
+      <main id="main-content" className="mx-auto w-full max-w-5xl flex-1 px-4 py-8 sm:px-6 sm:py-10">
         <nav aria-label="Breadcrumb" className="flex items-center gap-1 text-xs">
           <Link
             to="/"

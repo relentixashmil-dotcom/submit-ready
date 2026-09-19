@@ -262,7 +262,7 @@ export default function Landing() {
     <div className="flex min-h-screen flex-col">
       <SiteHeader />
 
-      <main className="flex-1">
+      <main id="main-content" className="flex-1">
         {/* Hero ------------------------------------------------------------- */}
         <section className="grid-paper border-b">
           <div className="mx-auto grid w-full max-w-6xl gap-10 px-4 py-12 sm:px-6 sm:py-16 lg:grid-cols-[1.15fr_1fr] lg:items-center lg:py-20">
@@ -381,41 +381,6 @@ export default function Landing() {
           </div>
         </section>
 
-        {/* Quick actions ---------------------------------------------------- */}
-        <section className="border-b bg-surface/50">
-          <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-8 sm:px-6">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <h2 className="font-mono text-sm font-semibold tracking-tight">
-                Jump straight into a tool
-              </h2>
-              <Link
-                to="/tools"
-                className="text-xs font-medium text-primary underline-offset-4 hover:underline"
-              >
-                See all tools
-              </Link>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {QUICK_ACTIONS.map((action, index) => (
-                <motion.div
-                  key={action.path}
-                  initial={{ opacity: 0, y: 8 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.3, delay: index * 0.04 }}
-                >
-                  <Button asChild variant="outline" size="sm" className="gap-2">
-                    <Link to={action.path}>
-                      <Wand2 className="size-3.5 text-primary" />
-                      {action.label}
-                    </Link>
-                  </Button>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </section>
-
         {/* Start with what you have ----------------------------------------- */}
         <section className="mx-auto w-full max-w-6xl px-4 py-14 sm:px-6">
           <motion.div {...fadeUp} className="flex flex-col gap-2">
@@ -451,6 +416,83 @@ export default function Landing() {
                 )}
               />
             ))}
+          </div>
+        </section>
+
+        {/* Quick actions — the most common jobs, one tap away ---------------- */}
+        <section className="border-b bg-surface/50">
+          <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-10 sm:px-6">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h2 className="font-mono text-sm font-semibold tracking-tight">
+                Jump straight into a tool
+              </h2>
+              <Link
+                to="/tools"
+                className="text-xs font-medium text-primary underline-offset-4 hover:underline"
+              >
+                See all tools
+              </Link>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {QUICK_ACTIONS.map((action, index) => (
+                <motion.div
+                  key={action.path}
+                  initial={{ opacity: 0, y: 8 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.3, delay: index * 0.04 }}
+                >
+                  <Button asChild variant="outline" className="h-10 gap-2 px-4">
+                    <Link to={action.path}>
+                      <Wand2 className="size-4 text-primary" />
+                      {action.label}
+                    </Link>
+                  </Button>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Popular requirements --------------------------------------------- */}
+        <section className="border-b bg-surface/40">
+          <div className="mx-auto w-full max-w-6xl px-4 py-12 sm:px-6">
+            <motion.div {...fadeUp} className="flex flex-col gap-2">
+              <p className="mono-label">common limits</p>
+              <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
+                Popular requirements
+              </h2>
+              <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">
+                These are the limits that show up most often on exam, scholarship,
+                government and job portals — each links to a tool with the target already
+                set.
+              </p>
+            </motion.div>
+
+            <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {POPULAR_REQUIREMENTS.map((item, index) => (
+                <motion.div
+                  key={item.path + item.label}
+                  initial={{ opacity: 0, y: 10 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "-40px" }}
+                  transition={{ duration: 0.3, delay: index * 0.04 }}
+                >
+                  <Link
+                    to={item.path}
+                    className="group flex items-center justify-between gap-3 rounded-xl border bg-card px-4 py-3 outline-none transition-colors hover:border-primary/50 focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                  >
+                    <span className="flex flex-col">
+                      <span className="font-mono text-sm font-semibold tracking-tight">
+                        {item.label}
+                      </span>
+                      <span className="text-xs text-muted-foreground">{item.hint}</span>
+                    </span>
+                    <ArrowRight className="size-4 text-muted-foreground transition-colors group-hover:text-primary" />
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
           </div>
         </section>
 
@@ -575,48 +617,6 @@ export default function Landing() {
               </motion.li>
             ))}
           </ol>
-        </section>
-
-        {/* Popular requirements --------------------------------------------- */}
-        <section className="border-y bg-surface/40">
-          <div className="mx-auto w-full max-w-6xl px-4 py-14 sm:px-6">
-            <motion.div {...fadeUp} className="flex flex-col gap-2">
-              <p className="mono-label">common limits</p>
-              <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
-                Popular requirements
-              </h2>
-              <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">
-                These are the limits that show up most often on exam, scholarship,
-                government and job portals — each links to a tool with the target already
-                set.
-              </p>
-            </motion.div>
-
-            <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {POPULAR_REQUIREMENTS.map((item, index) => (
-                <motion.div
-                  key={item.path + item.label}
-                  initial={{ opacity: 0, y: 10 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: "-40px" }}
-                  transition={{ duration: 0.3, delay: index * 0.04 }}
-                >
-                  <Link
-                    to={item.path}
-                    className="group flex items-center justify-between gap-3 rounded-xl border bg-card px-4 py-3 transition-colors hover:border-primary/50"
-                  >
-                    <span className="flex flex-col">
-                      <span className="font-mono text-sm font-semibold tracking-tight">
-                        {item.label}
-                      </span>
-                      <span className="text-xs text-muted-foreground">{item.hint}</span>
-                    </span>
-                    <ArrowRight className="size-4 text-muted-foreground transition-colors group-hover:text-primary" />
-                  </Link>
-                </motion.div>
-              ))}
-            </div>
-          </div>
         </section>
 
         {/* Privacy ---------------------------------------------------------- */}

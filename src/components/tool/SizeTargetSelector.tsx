@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import { Check, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +24,8 @@ export interface SizeTargetSelectorProps {
   /** Offer a "no target" option that keeps maximum quality. */
   allowNone?: boolean;
   noneLabel?: string;
+  /** Shown next to the current target, e.g. "files are verified against this". */
+  activeHint?: string;
   minBytes?: number;
   maxBytes?: number;
   className?: string;
@@ -37,18 +39,25 @@ function displayForCustomValue(bytes: number): { text: string; unit: "KB" | "MB"
   return { text: String(Math.round(bytes / KB)), unit: "KB" };
 }
 
+/**
+ * The size a form asks for is usually the whole reason someone opens a
+ * compression tool, so this is the primary control: large, obvious preset
+ * buttons under a plain "Make it under" heading.
+ */
 export function SizeTargetSelector({
   value,
   onChange,
   presets = SIZE_PRESETS,
-  label = "Target file size",
+  label = "Make it under",
   hint,
   allowNone = false,
   noneLabel = "No target — keep quality",
+  activeHint = "The downloaded file is measured against this size.",
   minBytes = MIN_TARGET_BYTES,
   maxBytes = MAX_TARGET_BYTES,
   className,
 }: SizeTargetSelectorProps) {
+  const labelId = useId();
   const presetMatch = value !== null && presets.includes(value);
   const [customOpen, setCustomOpen] = useState(value !== null && !presetMatch);
   const [initial] = useState(() =>
@@ -78,11 +87,17 @@ export function SizeTargetSelector({
   };
 
   return (
-    <div className={cn("flex flex-col gap-3", className)}>
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <Label className="text-sm font-semibold tracking-tight">{label}</Label>
+    <div
+      role="group"
+      aria-labelledby={labelId}
+      className={cn("flex flex-col gap-3", className)}
+    >
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <span id={labelId} className="text-base font-semibold tracking-tight">
+          {label}
+        </span>
         {value !== null ? (
-          <span className="font-mono text-xs text-muted-foreground">
+          <span className="font-mono text-xs text-primary">
             aiming for ≤ {formatBytes(value)}
           </span>
         ) : (
@@ -99,17 +114,19 @@ export function SizeTargetSelector({
             <Button
               key={preset}
               type="button"
-              size="sm"
               variant={active ? "default" : "outline"}
               aria-pressed={active}
-              className="min-w-20"
+              className={cn(
+                "h-10 min-w-24 px-4 font-mono text-sm tabular-nums",
+                !active && "hover:border-primary/60",
+              )}
               onClick={() => {
                 setCustomOpen(false);
                 setError(null);
                 onChange(preset);
               }}
             >
-              {active ? <Check className="size-3.5" /> : null}
+              {active ? <Check className="size-4" /> : null}
               {formatBytes(preset)}
             </Button>
           );
@@ -117,23 +134,23 @@ export function SizeTargetSelector({
 
         <Button
           type="button"
-          size="sm"
           variant={
             customOpen || (value !== null && !presetMatch) ? "default" : "outline"
           }
           aria-pressed={customOpen || (value !== null && !presetMatch)}
+          className="h-10 min-w-24 px-4"
           onClick={() => setCustomOpen((open) => !open)}
         >
-          <SlidersHorizontal className="size-3.5" />
+          <SlidersHorizontal className="size-4" />
           Custom
         </Button>
 
         {allowNone ? (
           <Button
             type="button"
-            size="sm"
             variant={value === null ? "default" : "outline"}
             aria-pressed={value === null}
+            className="h-10 px-4"
             onClick={() => {
               setCustomOpen(false);
               setError(null);
@@ -148,7 +165,7 @@ export function SizeTargetSelector({
       {customOpen ? (
         <div className="flex flex-col gap-2 rounded-lg border bg-muted/30 p-3">
           <div className="flex flex-wrap items-end gap-2">
-            <div className="flex flex-1 flex-col gap-1.5 min-w-32">
+            <div className="flex min-w-32 flex-1 flex-col gap-1.5">
               <Label htmlFor="custom-size" className="text-xs">
                 Custom target
               </Label>
@@ -195,9 +212,11 @@ export function SizeTargetSelector({
             </p>
           )}
         </div>
-      ) : hint ? (
-        <p className="text-xs text-muted-foreground">{hint}</p>
-      ) : null}
+      ) : (
+        <p className="text-xs text-muted-foreground">
+          {value !== null ? activeHint : hint}
+        </p>
+      )}
     </div>
   );
 }

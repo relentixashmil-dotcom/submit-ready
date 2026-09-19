@@ -11,6 +11,7 @@ import { FileList, type FileListItem } from "@/components/tool/FileList";
 import { ProgressIndicator } from "@/components/tool/ProgressIndicator";
 import { DownloadButton } from "@/components/tool/DownloadButton";
 import { BeforeAfterComparison } from "@/components/tool/BeforeAfterComparison";
+import { EmptyState, ErrorState } from "@/components/tool/StateMessage";
 import { ToolStep, OptionRow } from "@/components/tool/ToolStep";
 import { MM_TO_PT, imagesToPdf, type Orientation, type PagePreset } from "@/lib/pdf";
 import { openPdfForRendering, renderPageThumbnail, closePdf } from "@/lib/pdf-render";
@@ -435,12 +436,7 @@ export function ImagesToPdfTool() {
         ) : null}
 
         {error ? (
-          <p
-            className="rounded-lg border border-destructive/40 bg-destructive/5 px-3 py-2 text-sm text-destructive"
-            role="alert"
-          >
-            {error}
-          </p>
+          <ErrorState title="PDF creation failed" message={error} />
         ) : null}
       </ToolStep>
 
@@ -451,9 +447,11 @@ export function ImagesToPdfTool() {
         state={result ? "active" : "todo"}
       >
         {!result ? (
-          <p className="text-sm text-muted-foreground">
-            The generated PDF appears here with its page count and size.
-          </p>
+          <EmptyState
+            icon={<FileText className="size-5" />}
+            title="Your PDF appears here"
+            description="Add images and create the PDF, and page one will be rendered from the finished file along with its page count and size."
+          />
         ) : (
           <div className="flex flex-col gap-4">
             <BeforeAfterComparison
@@ -469,6 +467,7 @@ export function ImagesToPdfTool() {
                 bytes: result.size,
                 pages: result.pageCount,
               }}
+              action="PDF creation"
               notes={
                 stale
                   ? ["These settings have changed since the PDF was created. Regenerate to apply them."]
