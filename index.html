@@ -12,7 +12,13 @@
     name="description"
     content="SubmitReady is a free, browser-based toolkit to compress images, resize photos and signatures, convert images to PDF, compress, merge and split PDFs, and validate every file against upload requirements. Free accounts add a workspace and saved presets."
   />
-  <link rel="canonical" href="/" />
+  <!--
+    The canonical URL is rewritten per route by useSeo() at runtime; this tag is
+    the fallback for the landing page. `vite-ignore` is required: Vite treats the
+    href of every <link> as a build asset, and "/" resolves to the project root
+    directory, which makes the production build fail with EISDIR.
+  -->
+  <link rel="canonical" href="/" vite-ignore />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
