@@ -1,4 +1,8 @@
 .env.local
 node_modules
 dist
-src/convex/_generated
+
+# Convex's generated API bindings are NOT ignored: `convex codegen` (and Convex's
+# own CLI docs) require them to be committed, because the app cannot typecheck or
+# bundle without them. Builds run `scripts/convex-codegen.mjs`, which refreshes
+# them when CONVEX_DEPLOY_KEY is available and otherwise uses these files.

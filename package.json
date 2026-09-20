@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "node scripts/convex-codegen.mjs && tsc -b && vite build",
+    "convex:codegen": "convex codegen",
     "lint": "eslint .",
     "format": "prettier --write .",
     "preview": "vite preview"
